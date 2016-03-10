@@ -41,8 +41,7 @@ curl -i -H "Content-Type: application/json" -X POST \
 
 Basics:
 
-- [ ] command line args parsing
-- [ ] command line param: server listen interface & port
+- [x] command line param: server listen address
 - [ ] logging
 
 Raft:
@@ -61,3 +60,6 @@ Locking:
 - [ ] In-memory lock backend
 - [ ] Boltdb based persistent lock backend
 - [ ] Proxy Lock API calls to raft leader
+
+Later:
+- [ ] Stop -help from showing "-httptest.serve"
