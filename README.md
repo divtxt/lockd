@@ -42,7 +42,8 @@ curl -i -H "Content-Type: application/json" -X POST \
 Basics:
 
 - [x] command line param: server listen address
-- [ ] logging
+- [x] logging setup
+- [ ] gin logging to go logging bridge
 
 Raft:
 
