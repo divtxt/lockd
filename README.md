@@ -35,3 +35,29 @@ curl -i -H "Content-Type: application/json" -X POST \
     -d "{'name':'Foo'}" \
     http://127.0.0.1:8080/unlock
 ```
+
+
+## TODO
+
+Basics:
+
+- [ ] command line args parsing
+- [ ] command line param: server listen interface & port
+- [ ] logging
+
+Raft:
+
+- [ ] cluster config file & config file loading
+- [ ] command line param: cluster config file name
+- [ ] raft consensus module
+- [ ] raft rpc endpoints
+- [ ] peer rpc service
+
+Locking:
+
+- [ ] Lock API endpoints with dummy implementation
+- [ ] Lock State Machine API
+- [ ] Lock front-end implementation
+- [ ] In-memory lock backend
+- [ ] Boltdb based persistent lock backend
+- [ ] Proxy Lock API calls to raft leader
