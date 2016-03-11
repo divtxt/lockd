@@ -16,7 +16,7 @@ Lock an entry:
 
 ```
 curl -i -H "Content-Type: application/json" -X POST \
-    -d "{'name':'Foo', 'ttl':30}" \
+    -d "{'name':'Foo'}" \
     http://127.0.0.1:8080/lock
 ```
 
@@ -39,28 +39,47 @@ curl -i -H "Content-Type: application/json" -X POST \
 
 ## TODO
 
-Basics:
+Basic Daemon:
 
 - [x] command line param: server listen address
 - [x] logging setup
-- [ ] gin logging to go logging bridge
+- [ ] gin logging to golang standard logging bridge
 
-Raft:
+Basic Single-Node Locking:
+
+- [ ] Lock & Unlock API endpoints
+- [ ] Lock state persistence API
+- [ ] In-memory state persistence
+- [ ] Single node driver
+
+Lock State Persistence:
+
+- [ ] Boltdb state persistence
+- [ ] Command line param: choice of persistence mode
+- [ ] Command line param: Boltdb state file name
+
+Lock TTL:
+
+- [ ] Lock TTL params
+- [ ] Expired Lock Unlocker
+
+Lock Admin:
+
+- [ ] List Locks API
+- [ ] Web UI: bootstrap assets
+- [ ] Web UI: list locks
+- [ ] Web UI: lock
+- [ ] Web UI: unlock
+
+Raft Locking:
 
 - [ ] cluster config file & config file loading
 - [ ] command line param: cluster config file name
 - [ ] raft consensus module
 - [ ] raft rpc endpoints
 - [ ] peer rpc service
+- [ ] proxy Lock & Unlock API calls to raft leader
 
-Locking:
-
-- [ ] Lock API endpoints with dummy implementation
-- [ ] Lock State Machine API
-- [ ] Lock front-end implementation
-- [ ] In-memory lock backend
-- [ ] Boltdb based persistent lock backend
-- [ ] Proxy Lock API calls to raft leader
-
-Later:
-- [ ] Stop -help from showing "-httptest.serve"
+Misc:
+- [ ] Stop `-help` from showing "-httptest.serve"
+- [ ] Vendorize dependencies
