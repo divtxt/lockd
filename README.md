@@ -43,7 +43,7 @@ Basic Daemon:
 
 - [x] command line param: server listen address
 - [x] logging setup
-- [ ] gin logging to golang standard logging bridge
+- [x] gin logging to golang standard logging bridge
 
 Basic Single-Node Locking:
 

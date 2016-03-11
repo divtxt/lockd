@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/divtxt/lockd/misc"
 	"github.com/gin-gonic/gin"
 	"log"
 )
@@ -19,7 +20,10 @@ func main() {
 
 	// Run http service
 	log.Println("Starting server on address:", *listenAddrPtr)
-	r := gin.Default()
+
+	r := gin.New()
+	r.Use(misc.StdLogLogger())
+
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "hello, world!",
