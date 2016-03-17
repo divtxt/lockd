@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	api_lock "github.com/divtxt/lockd/api"
 	"github.com/divtxt/lockd/misc"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -29,5 +30,8 @@ func main() {
 			"message": "hello, world!",
 		})
 	})
+
+	api_lock.AddEndpoints(r)
+
 	r.Run(*listenAddrPtr)
 }
