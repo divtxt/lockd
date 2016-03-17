@@ -16,11 +16,12 @@ Lock an entry:
 
 ```
 curl -i -H "Content-Type: application/json" -X POST \
-    -d "{'name':'Foo'}" \
+    -d '{"name":"Foo"}' \
     http://127.0.0.1:8080/lock
 ```
 
-Try to lock it again - you should get an error (409 Conflict ?).
+Try to lock the same name again and you should get an error (409 Conflict ?).
+
 
 To check if an entry is locked:
 
@@ -32,7 +33,7 @@ To unlock the entry:
 
 ```
 curl -i -H "Content-Type: application/json" -X POST \
-    -d "{'name':'Foo'}" \
+    -d '{"name":"Foo"}' \
     http://127.0.0.1:8080/unlock
 ```
 
@@ -47,7 +48,7 @@ Basic Daemon:
 
 Basic Single-Node Locking:
 
-- [ ] Lock & Unlock API endpoints
+- [x] Lock & Unlock API endpoints
 - [ ] Lock state persistence API
 - [ ] In-memory state persistence
 - [ ] Single node driver
