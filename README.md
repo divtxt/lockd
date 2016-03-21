@@ -15,9 +15,8 @@ Then, run the following commands in another terminal:
 Lock an entry:
 
 ```
-curl -i -H "Content-Type: application/json" -X POST \
-    -d '{"name":"Foo"}' \
-    http://127.0.0.1:8080/lock
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/lock \
+    -d '{"name":"Foo"}'
 ```
 
 Try to lock the same name again and you should get an error (409 Conflict ?).
@@ -26,15 +25,14 @@ Try to lock the same name again and you should get an error (409 Conflict ?).
 To check if an entry is locked:
 
 ```
-curl -i http://127.0.0.1:8080/lock?name=Foo
+curl -i http://127.0.0.1:2080/lock?name=Foo
 ```
 
 To unlock the entry:
 
 ```
-curl -i -H "Content-Type: application/json" -X POST \
-    -d '{"name":"Foo"}' \
-    http://127.0.0.1:8080/unlock
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/unlock \
+    -d '{"name":"Foo"}'
 ```
 
 

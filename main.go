@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Parse command line args
-	listenAddrPtr := flag.String("listen", ":8080", "listen address")
+	listenAddrPtr := flag.String("listen", ":2080", "listen address")
 	flag.Parse()
 
 	// Initialize logging
