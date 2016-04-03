@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	api_lock "github.com/divtxt/lockd/api"
-	"github.com/divtxt/lockd/misc"
+	"github.com/divtxt/lockd/ginx"
+	"github.com/divtxt/lockd/lockd"
 	"github.com/gin-gonic/gin"
 	"log"
 )
@@ -13,25 +13,19 @@ func main() {
 	listenAddrPtr := flag.String("listen", ":2080", "listen address")
 	flag.Parse()
 
-	// Initialize logging
+	// Reset standard log flags (undo Gin's settings)
 	log.SetFlags(log.LstdFlags)
 
-	// Prevent Gin debug logging
+	// Disable Gin debug logging
 	gin.SetMode(gin.ReleaseMode)
 
-	// Run http service
-	log.Println("Starting server on address:", *listenAddrPtr)
-
+	// Configure http service
 	r := gin.New()
-	r.Use(misc.StdLogLogger())
+	r.Use(ginx.StdLogLogger())
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hello, world!",
-		})
-	})
+	lockd.AddLockApiEndpoints(r)
 
-	api_lock.AddEndpoints(r)
-
+	// Run forever / till stopped
+	log.Println("Starting server on address:", *listenAddrPtr)
 	r.Run(*listenAddrPtr)
 }

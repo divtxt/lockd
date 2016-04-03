@@ -1,4 +1,4 @@
-package lock
+package lockd
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func AddEndpoints(e *gin.Engine) {
+func AddLockApiEndpoints(e *gin.Engine) {
 	e.POST("/lock", lockHandler)
 	e.POST("/unlock", unlockHandler)
 }
