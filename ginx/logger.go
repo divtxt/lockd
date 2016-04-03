@@ -1,4 +1,4 @@
-package misc
+package ginx
 
 import (
 	"github.com/gin-gonic/gin"
