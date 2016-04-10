@@ -15,7 +15,7 @@ Then, run the following commands in another terminal:
 Lock an entry:
 
 ```
-curl -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/lock \
+curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/lock \
     -d '{"name":"Foo"}'
 ```
 
@@ -31,7 +31,7 @@ curl -i http://127.0.0.1:2080/lock?name=Foo
 To unlock the entry:
 
 ```
-curl -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/unlock \
+curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/unlock \
     -d '{"name":"Foo"}'
 ```
 
