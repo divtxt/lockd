@@ -19,12 +19,15 @@ func main() {
 	// Disable Gin debug logging
 	gin.SetMode(gin.ReleaseMode)
 
+	// Instantiate a lock service
+	var l lockd.LockApi = lockd.NewLockApiImpl()
+
 	// Configure http service
 	r := gin.New()
 	r.Use(ginx.StdLogLogger())
 	r.Use(ginx.StdLogRecovery())
 
-	lockd.AddLockApiEndpoints(r)
+	lockd.AddLockApiEndpoints(r, l)
 
 	// Run forever / till stopped
 	log.Println("Starting server on address:", *listenAddrPtr)
