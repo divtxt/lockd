@@ -22,6 +22,7 @@ func main() {
 	// Configure http service
 	r := gin.New()
 	r.Use(ginx.StdLogLogger())
+	r.Use(ginx.StdLogRecovery())
 
 	lockd.AddLockApiEndpoints(r)
 
