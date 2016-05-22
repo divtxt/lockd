@@ -47,9 +47,10 @@ Basic Daemon:
 Basic Single-Node Locking:
 
 - [x] Lock & Unlock API endpoints
-- [ ] Lock state persistence API
+- [x] Lock state persistence API
 - [ ] In-memory state persistence
-- [ ] Single node driver
+- [ ] Implement single-node locking service
+- [ ] Refactor to use raft as single-node cluster
 
 Lock State Persistence:
 
