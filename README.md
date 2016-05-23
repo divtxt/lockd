@@ -53,6 +53,14 @@ Basic Single-Node Locking:
 - [x] Implement single-node locking service
 - [ ] Refactor to use raft as single-node cluster
 
+Lock Features:
+
+- [ ] Lock status query API
+- [ ] Lock request/client id field
+- [ ] Request/client id override
+- [ ] Field size limit checks
+- [ ] External test script
+
 Lock State Persistence:
 
 - [ ] Boltdb state persistence
@@ -67,12 +75,12 @@ Lock TTL:
 Lock Admin:
 
 - [ ] List Locks API
-- [ ] Web UI: bootstrap assets
+- [ ] Web UI: basic assets
 - [ ] Web UI: list locks
 - [ ] Web UI: lock
 - [ ] Web UI: unlock
 
-Raft Locking:
+Multi-Node Locking:
 
 - [ ] cluster config file & config file loading
 - [ ] command line param: cluster config file name
@@ -82,5 +90,7 @@ Raft Locking:
 - [ ] proxy Lock & Unlock API calls to raft leader
 
 Misc:
+- [ ] Add metrics & logging
+- [ ] Expose raft details e.g. leader, term
 - [ ] Stop `-help` from showing "-httptest.serve"
 - [ ] Vendorize dependencies
