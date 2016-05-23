@@ -3,6 +3,7 @@
 
 A distributed lock service.
 
+See [API.md](API.md) for server API documentation.
 
 ## Development
 
