@@ -19,7 +19,7 @@ curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/lock \
     -d '{"name":"Foo"}'
 ```
 
-Try to lock the same name again and you should get an error (409 Conflict ?).
+Try to lock the same name again and you should get a 409 Conflict error.
 
 
 To check if an entry is locked:
@@ -48,8 +48,8 @@ Basic Single-Node Locking:
 
 - [x] Lock & Unlock API endpoints
 - [x] Lock state persistence API
-- [ ] In-memory state persistence
-- [ ] Implement single-node locking service
+- [x] In-memory state persistence
+- [x] Implement single-node locking service
 - [ ] Refactor to use raft as single-node cluster
 
 Lock State Persistence:
