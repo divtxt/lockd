@@ -8,8 +8,9 @@ import (
 )
 
 func AddLockApiEndpoints(e *gin.Engine, lockApi LockApi) {
-	e.POST("/lock", makeLockHandler(lockApi))
-	e.POST("/unlock", makeUnlockHandler(lockApi))
+	api := e.Group("/api")
+	api.POST("/lock", makeLockHandler(lockApi))
+	api.POST("/unlock", makeUnlockHandler(lockApi))
 }
 
 type LockRequest struct {
