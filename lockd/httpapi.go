@@ -24,6 +24,7 @@ func makeLockHandler(lockApi LockApi) func(c *gin.Context) {
 			log.Printf("Attempt to lock: %q", lockRequest.Name)
 			success, err := lockApi.Lock(lockRequest.Name)
 			if err != nil {
+				log.Printf("Error: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{})
 			} else {
 				if success {
@@ -45,6 +46,7 @@ func makeUnlockHandler(lockApi LockApi) func(c *gin.Context) {
 			log.Printf("Attempt to unlock: %q", lockRequest.Name)
 			success, err := lockApi.Unlock(lockRequest.Name)
 			if err != nil {
+				log.Printf("Error: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{})
 			} else {
 				if success {
