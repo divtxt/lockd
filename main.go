@@ -20,7 +20,12 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	// Instantiate a lock service
-	var l lockd.LockApi = lockd.NewLockApiImpl(lockd.NewInMemoryLSP())
+	var l lockd.LockApi
+	var err error
+	l, err = lockd.NewLockApiImpl(lockd.NewInMemoryLSP())
+	if err != nil {
+		panic(err)
+	}
 
 	// Configure http service
 	r := gin.New()
