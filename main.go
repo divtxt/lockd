@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/divtxt/lockd/ginx"
 	"github.com/divtxt/lockd/lockd"
+	"github.com/divtxt/lockd/locking"
 	"github.com/gin-gonic/gin"
 	"log"
 )
@@ -20,9 +21,9 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	// Instantiate a lock service
-	var l lockd.LockApi
+	var l *locking.InMemoryLock
 	var err error
-	l, err = lockd.NewLockApiImpl(lockd.NewInMemoryLSP())
+	l, err = locking.NewLockApiImpl()
 	if err != nil {
 		panic(err)
 	}

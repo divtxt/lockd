@@ -51,7 +51,7 @@ Basic Single-Node Locking:
 - [x] Lock state persistence API
 - [x] In-memory state persistence
 - [x] Implement single-node locking service
-- [ ] Refactor to use raft as single-node cluster
+- [x] Refactor to use raft as single-node cluster
 
 Lock Features:
 
