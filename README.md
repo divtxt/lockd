@@ -92,5 +92,5 @@ Multi-Node Locking:
 Misc:
 - [ ] Add metrics & logging
 - [ ] Expose raft details e.g. leader, term
-- [ ] Stop `-help` from showing "-httptest.serve"
+- [x] Stop `-help` from showing "-httptest.serve"
 - [ ] Vendorize dependencies
