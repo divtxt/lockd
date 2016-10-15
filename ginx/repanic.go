@@ -17,16 +17,19 @@ var (
 	slash     = []byte("/")
 )
 
-// Gin recovery middleware that recovers from panics and writes a 500. Writes to stdlib log.
+// Gin recovery middleware that recovers from panics, writes a 500, and then repanics
+// in a new go routine to ensure we actually crash the process.
+// Writes to stdlib log.
 // Based on gin.Recovery
-func StdLogRecovery() gin.HandlerFunc {
+func StdLogRepanic() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
 				stack := stack(3)
 				httprequest, _ := httputil.DumpRequest(c.Request, false)
-				log.Printf("[Recovery] panic recovered:\n%s%s\n%s\n", string(httprequest), err, stack)
+				log.Printf("[Recovery] panic recovered (will repanic after sending 500):\n%s%s\n%s\n", string(httprequest), err, stack)
 				c.AbortWithStatus(500)
+				go panic("Repanic!")
 			}
 		}()
 		c.Next()
@@ -79,9 +82,9 @@ func function(pc uintptr) []byte {
 	// The name includes the path name to the package, which is unnecessary
 	// since the file name is already included.  Plus, it has center dots.
 	// That is, we see
-	//	runtime/debug.*T·ptrmethod
+	//  runtime/debug.*T·ptrmethod
 	// and want
-	//	*T.ptrmethod
+	//  *T.ptrmethod
 	// Also the package path might contains dot (e.g. code.google.com/...),
 	// so first eliminate the path prefix
 	if lastslash := bytes.LastIndex(name, slash); lastslash >= 0 {
