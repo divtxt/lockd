@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/divtxt/lockd/ginx"
-	"github.com/divtxt/lockd/lockd"
+	"github.com/divtxt/lockd/httpimpl"
 	"github.com/divtxt/lockd/locking"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -33,7 +33,7 @@ func main() {
 	r.Use(ginx.StdLogLogger())
 	r.Use(ginx.StdLogRepanic())
 
-	lockd.AddLockApiEndpoints(r, l)
+	httpimpl.AddLockApiEndpoints(r, l)
 
 	// Run forever / till stopped
 	log.Println("Starting server on address:", *listenAddrPtr)
