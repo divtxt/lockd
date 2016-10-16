@@ -1,4 +1,4 @@
-package lockd
+package httpimpl
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package lockd
+package httpimpl
 
 type LockApi interface {
 	Lock(name string) (bool, error)
