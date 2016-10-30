@@ -17,7 +17,7 @@ const (
 )
 
 // Implementation of locking.LockApi
-func NewLockApiImpl() (*InMemoryLock, error) {
+func NewLockApiImpl() (*RaftLock, error) {
 
 	// --  Prepare raft ConsensusModule parameters
 
@@ -47,9 +47,9 @@ func NewLockApiImpl() (*InMemoryLock, error) {
 
 	// -- Make the LockApi
 
-	inMemoryLock := NewInMemoryLock(raftCm, raftLog)
+	raftLock := NewRaftLock(raftCm, raftLog)
 
-	raftCm.Start(inMemoryLock)
+	raftCm.Start(raftLock)
 
-	return inMemoryLock, nil
+	return raftLock, nil
 }

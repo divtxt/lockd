@@ -6,7 +6,7 @@ import (
 )
 
 // In-memory implementation of Lock API
-type InMemoryLock struct {
+type RaftLock struct {
 	// Lock state
 	committedLocks   map[string]bool
 	uncommittedLocks map[string]bool
@@ -20,15 +20,15 @@ type InMemoryLock struct {
 	// maxEntriesPerAppendEntry uint64
 }
 
-// Construct a new InMemoryLock.
+// Construct a new RaftLock.
 //
 // Rebuilds the state machine by replaying from the log. This could take a while!
 //
 // It is expected that raft.ConsensusModule.Start() will be called later using the
-// returned InMemoryLock as the raft.ChangeListener parameter.
+// returned RaftLock as the raft.ChangeListener parameter.
 //
-func NewInMemoryLock(raftCM raft.IConsensusModule, raftLog raft.LogReadOnly) *InMemoryLock {
-	iml := &InMemoryLock{
+func NewRaftLock(raftCM raft.IConsensusModule, raftLog raft.LogReadOnly) *RaftLock {
+	rl := &RaftLock{
 		make(map[string]bool),
 		make(map[string]bool),
 		raftCM,
@@ -36,35 +36,35 @@ func NewInMemoryLock(raftCM raft.IConsensusModule, raftLog raft.LogReadOnly) *In
 	}
 
 	// Build state machine from log
-	log.Print("NewInMemoryLock(): Rebuilding state machine from raft log...")
+	log.Print("NewRaftLock(): Rebuilding state machine from raft log...")
 	// iole, err := raftLog.GetIndexOfLastEntry()
 
 	// FIXME: ...
 
-	log.Printf("NewInMemoryLock(): Rebuilt state machine by replaying %v log entries", -1)
+	log.Printf("NewRaftLock(): Rebuilt state machine by replaying %v log entries", -1)
 
-	return iml
+	return rl
 }
 
 // -- Implement LockApi interface
 
-func (iml *InMemoryLock) Lock(name string) (bool, error) {
+func (rl *RaftLock) Lock(name string) (bool, error) {
 	// FIXME: mutex
 
 	// check uncommitted state - if already locked return false
-	if _, hasKey := iml.uncommittedLocks[name]; hasKey {
+	if _, hasKey := rl.uncommittedLocks[name]; hasKey {
 		return false, nil
 	}
 
 	// add lock to uncommitted
-	iml.uncommittedLocks[name] = true
+	rl.uncommittedLocks[name] = true
 
 	// append command to raft log
 	command, err := CmdSerialize(&Cmd{true, name})
 	if err != nil {
 		return false, err
 	}
-	_, err = iml.raftCM.AppendCommand(command)
+	_, err = rl.raftCM.AppendCommand(command)
 	if err != nil {
 		return false, err
 	}
@@ -74,23 +74,23 @@ func (iml *InMemoryLock) Lock(name string) (bool, error) {
 	return true, nil
 }
 
-func (iml *InMemoryLock) Unlock(name string) (bool, error) {
+func (rl *RaftLock) Unlock(name string) (bool, error) {
 	// FIXME: mutex
 
 	// check uncommitted state - if not locked return false
-	if _, hasKey := iml.uncommittedLocks[name]; !hasKey {
+	if _, hasKey := rl.uncommittedLocks[name]; !hasKey {
 		return false, nil
 	}
 
 	// remove lock from uncommitted
-	delete(iml.uncommittedLocks, name)
+	delete(rl.uncommittedLocks, name)
 
 	// append command to raft log
 	command, err := CmdSerialize(&Cmd{false, name})
 	if err != nil {
 		return false, err
 	}
-	_, err = iml.raftCM.AppendCommand(command)
+	_, err = rl.raftCM.AppendCommand(command)
 	if err != nil {
 		return false, err
 	}
@@ -102,6 +102,6 @@ func (iml *InMemoryLock) Unlock(name string) (bool, error) {
 
 // -- Implement raft.ChangeListener interface
 
-func (iml *InMemoryLock) CommitIndexChanged(logIndex raft.LogIndex) {
+func (rl *RaftLock) CommitIndexChanged(logIndex raft.LogIndex) {
 	// FIXME: advance commit!
 }
