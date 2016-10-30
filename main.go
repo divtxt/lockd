@@ -21,7 +21,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	// Instantiate a lock service
-	var l *locking.InMemoryLock
+	var l *locking.RaftLock
 	var err error
 	l, err = locking.NewLockApiImpl()
 	if err != nil {
