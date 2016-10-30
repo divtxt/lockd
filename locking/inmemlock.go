@@ -64,7 +64,7 @@ func (iml *InMemoryLock) Lock(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	err = iml.raftCM.AppendCommand(command)
+	_, err = iml.raftCM.AppendCommand(command)
 	if err != nil {
 		return false, err
 	}
@@ -90,7 +90,7 @@ func (iml *InMemoryLock) Unlock(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	err = iml.raftCM.AppendCommand(command)
+	_, err = iml.raftCM.AppendCommand(command)
 	if err != nil {
 		return false, err
 	}
