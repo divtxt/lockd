@@ -1,4 +1,4 @@
-package locking
+package raftlock
 
 import (
 	"encoding/json"

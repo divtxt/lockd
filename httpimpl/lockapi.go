@@ -1,6 +1,7 @@
 package httpimpl
 
 type LockApi interface {
-	Lock(name string) (bool, error)
-	Unlock(name string) (bool, error)
+	IsLocked(name string) (bool, bool)
+	Lock(name string) <-chan struct{}
+	Unlock(name string) <-chan struct{}
 }

@@ -52,7 +52,7 @@ Basic Single-Node Locking:
 - [x] In-memory state persistence
 - [x] Implement single-node locking service
 - [x] Refactor to use raft as single-node cluster
-- [ ] Lock wait for raft commit
+- [x] Lock wait for raft commit
 
 Lock Features:
 
