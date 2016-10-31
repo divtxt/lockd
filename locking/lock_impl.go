@@ -1,6 +1,7 @@
 package locking
 
 import (
+	"github.com/divtxt/lockd/raftlock"
 	"github.com/divtxt/raft"
 	raft_config "github.com/divtxt/raft/config"
 	raft_impl "github.com/divtxt/raft/impl"
@@ -17,7 +18,7 @@ const (
 )
 
 // Implementation of locking.LockApi
-func NewLockApiImpl() (*RaftLock, error) {
+func NewLockApiImpl() (*raftlock.RaftLock, error) {
 
 	// --  Prepare raft ConsensusModule parameters
 
@@ -47,7 +48,12 @@ func NewLockApiImpl() (*RaftLock, error) {
 
 	// -- Make the LockApi
 
-	raftLock := NewRaftLock(raftCm, raftLog)
+	raftLock := raftlock.NewRaftLock(
+		raftCm,
+		raftLog,
+		[]string{}, // no initial locks
+		0,          // initialCommitIndex
+	)
 
 	raftCm.Start(raftLock)
 
