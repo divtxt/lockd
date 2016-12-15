@@ -56,11 +56,17 @@ Basic Single-Node Locking:
 
 Lock Features:
 
+- [ ] API timeouts
+- [ ] Field content and size limit checks
 - [ ] Lock status query API
 - [ ] Lock request/client id field
 - [ ] Request/client id override
-- [ ] Field size limit checks
+- [ ] Lock acquire wait time
+
+Integration Testing:
+
 - [ ] External test script
+- [ ] Travis runs server and test script
 
 Lock State Persistence:
 
@@ -90,7 +96,19 @@ Multi-Node Locking:
 - [ ] peer rpc service
 - [ ] proxy Lock & Unlock API calls to raft leader
 
+Clients:
+
+- [ ] Ruby client
+- [ ] Python client
+- [ ] Java/Scala client
+
+Servers:
+
+- [ ] Homebrew installable binary
+- [ ] Linux binary
+
 Misc:
+
 - [ ] Add metrics & logging
 - [ ] Expose raft details e.g. leader, term
 - [x] Stop `-help` from showing "-httptest.serve"
