@@ -5,7 +5,7 @@ package statemachine
 // Concurrence safety is not required by this interface.
 //
 type LockStateMachine interface {
-	IsLocked(name string) (bool, error)
-	Lock(name string) (bool, error)
-	Unlock(name string) (bool, error)
+	IsLocked(name string) bool
+	Lock(name string) bool
+	Unlock(name string) bool
 }

@@ -11,21 +11,18 @@ func TestInMemoryLSM(t *testing.T) {
 
 	var lsm statemachine.LockStateMachine = statemachine.NewInMemoryLSM()
 
-	f_withErrCheck := func(f func(name string) (bool, error)) f_name_expect_bool {
+	fExpectResult := func(f func(name string) bool) f_name_expect_bool {
 		return func(name string, expected bool) {
-			actual, err := f(name)
-			if err != nil {
-				t.Fatal(err)
-			}
+			actual := f(name)
 			if actual != expected {
 				t.Fatal(actual)
 			}
 		}
 	}
 
-	lsm_IsLocked := f_withErrCheck(lsm.IsLocked)
-	lsm_Lock := f_withErrCheck(lsm.Lock)
-	lsm_Unlock := f_withErrCheck(lsm.Unlock)
+	lsm_IsLocked := fExpectResult(lsm.IsLocked)
+	lsm_Lock := fExpectResult(lsm.Lock)
+	lsm_Unlock := fExpectResult(lsm.Unlock)
 
 	lsm_IsLocked("foo", false)
 	lsm_IsLocked("bar", false)

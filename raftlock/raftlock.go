@@ -55,14 +55,8 @@ func NewRaftLock(
 		make(map[raft.LogIndex]chan struct{}),
 	}
 
-	err := applyLocks(initialLocks, rl.committedLocks)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
-	err = applyLocks(initialLocks, rl.uncommittedLocks)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
+	applyLocks(initialLocks, rl.committedLocks)
+	applyLocks(initialLocks, rl.uncommittedLocks)
 
 	// Start commitApplier goroutine
 	rl.commitApplier = runner.NewTriggeredRunner(rl.applyPendingCommits)
@@ -80,14 +74,8 @@ func (rl *RaftLock) IsLocked(name string) (bool, bool) {
 	// FIXME: mutex
 
 	// check uncommitted state - if already locked return nil
-	committedState, err := rl.committedLocks.IsLocked(name)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
-	uncommittedState, err := rl.uncommittedLocks.IsLocked(name)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
+	committedState := rl.committedLocks.IsLocked(name)
+	uncommittedState := rl.uncommittedLocks.IsLocked(name)
 
 	return committedState, uncommittedState
 }
@@ -111,10 +99,7 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 	// FIXME: mutex
 
 	// check uncommitted state - if already locked return nil
-	alreadyLocked, err := rl.uncommittedLocks.IsLocked(name)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
+	alreadyLocked := rl.uncommittedLocks.IsLocked(name)
 	if alreadyLocked {
 		return nil
 	}
@@ -130,10 +115,7 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 	}
 
 	// apply lock action to uncommitted
-	lockSuccess, err := rl.uncommittedLocks.Lock(name)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
+	lockSuccess := rl.uncommittedLocks.Lock(name)
 	if !lockSuccess {
 		panic(fmt.Sprintf("FATAL: uncommittedLocks.Lock() unexpectedly already locked: %v", name))
 	}
@@ -160,10 +142,7 @@ func (rl *RaftLock) Unlock(name string) <-chan struct{} {
 	// FIXME: mutex
 
 	// check uncommitted state - if not locked return nil
-	alreadyLocked, err := rl.uncommittedLocks.IsLocked(name)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
+	alreadyLocked := rl.uncommittedLocks.IsLocked(name)
 	if !alreadyLocked {
 		return nil
 	}
@@ -179,10 +158,7 @@ func (rl *RaftLock) Unlock(name string) <-chan struct{} {
 	}
 
 	// apply unlock action to uncommitted
-	unlockSuccess, err := rl.uncommittedLocks.Unlock(name)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
+	unlockSuccess := rl.uncommittedLocks.Unlock(name)
 	if !unlockSuccess {
 		panic(fmt.Sprintf("FATAL: uncommittedLocks.Unlock() unexpectedly not locked: %v", name))
 	}
@@ -213,14 +189,10 @@ func (rl *RaftLock) CommitIndexChanged(commitIndex raft.LogIndex) {
 // Lock the listed entries.
 //
 // Failures to lock for entries already locked or duplicate are ignored.
-func applyLocks(locks []string, lsm statemachine.LockStateMachine) error {
+func applyLocks(locks []string, lsm statemachine.LockStateMachine) {
 	for _, l := range locks {
-		_, err := lsm.Lock(l)
-		if err != nil {
-			return err
-		}
+		lsm.Lock(l)
 	}
-	return nil
 }
 
 //
@@ -281,18 +253,12 @@ func (rl *RaftLock) applyOnePendingCommit() {
 	// Apply to committedLocks
 	name := cmd.Name
 	if cmd.Lock {
-		lockSuccess, err := rl.committedLocks.Lock(name)
-		if err != nil {
-			panic(err) // FIXME: non-panic error handling
-		}
+		lockSuccess := rl.committedLocks.Lock(name)
 		if !lockSuccess {
 			panic(fmt.Sprintf("FATAL: committedLocks.Lock() unexpectedly already locked: %v", name))
 		}
 	} else {
-		unlockSuccess, err := rl.committedLocks.Unlock(name)
-		if err != nil {
-			panic(err) // FIXME: non-panic error handling
-		}
+		unlockSuccess := rl.committedLocks.Unlock(name)
 		if !unlockSuccess {
 			panic(fmt.Sprintf("FATAL: committedLocks.Unlock() unexpectedly not locked: %v", name))
 		}
