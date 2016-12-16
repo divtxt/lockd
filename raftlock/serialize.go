@@ -5,14 +5,12 @@ import (
 	"github.com/divtxt/raft"
 )
 
-//
-type Cmd struct {
+type lockAction struct {
 	Lock bool   `json:"a"`
 	Name string `json:"n"`
 }
 
-//
-func CmdSerialize(cmd *Cmd) (raft.Command, error) {
+func lockActionSerialize(cmd *lockAction) (raft.Command, error) {
 	jsonBytes, err := json.Marshal(cmd)
 	if err != nil {
 		return nil, err
@@ -20,9 +18,8 @@ func CmdSerialize(cmd *Cmd) (raft.Command, error) {
 	return jsonBytes, nil
 }
 
-//
-func CmdDeserialize(command raft.Command) (*Cmd, error) {
-	var cmd *Cmd = &Cmd{}
+func lockActionDeserialize(command raft.Command) (*lockAction, error) {
+	var cmd *lockAction = &lockAction{}
 	err := json.Unmarshal(command, cmd)
 	if err != nil {
 		return nil, err

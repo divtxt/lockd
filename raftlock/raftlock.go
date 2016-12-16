@@ -105,7 +105,7 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 	}
 
 	// append command to raft log
-	command, err := CmdSerialize(&Cmd{true, name})
+	command, err := lockActionSerialize(&lockAction{true, name})
 	if err != nil {
 		panic(err) // FIXME: non-panic error handling
 	}
@@ -148,7 +148,7 @@ func (rl *RaftLock) Unlock(name string) <-chan struct{} {
 	}
 
 	// append command to raft log
-	command, err := CmdSerialize(&Cmd{false, name})
+	command, err := lockActionSerialize(&lockAction{false, name})
 	if err != nil {
 		panic(err) // FIXME: non-panic error handling
 	}
@@ -245,7 +245,7 @@ func (rl *RaftLock) applyOnePendingCommit() {
 	}
 
 	// Deserialize the command
-	cmd, err := CmdDeserialize(entries[0].Command)
+	cmd, err := lockActionDeserialize(entries[0].Command)
 	if err != nil {
 		panic(err) // FIXME: non-panic error handling
 	}
