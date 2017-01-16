@@ -14,7 +14,10 @@ func TestRaftLock(t *testing.T) {
 	var raftLog raft.Log = raft_log.NewInMemoryLog()
 	for logIndex := 1; logIndex <= 101; logIndex++ {
 		entry := raft.LogEntry{raft.TermNo(logIndex / 10), []byte{}}
-		raftLog.AppendEntry(entry)
+		_, err := raftLog.AppendEntry(entry)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	iole, err := raftLog.GetIndexOfLastEntry()
 	if err != nil {

@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
+	"log"
+
 	"github.com/divtxt/lockd/ginx"
 	"github.com/divtxt/lockd/httpimpl"
 	"github.com/divtxt/lockd/locking"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 func main() {
@@ -37,5 +38,8 @@ func main() {
 
 	// Run forever / till stopped
 	log.Println("Starting server on address:", *listenAddrPtr)
-	r.Run(*listenAddrPtr)
+	err = r.Run(*listenAddrPtr)
+	if err != nil {
+		panic(err)
+	}
 }
