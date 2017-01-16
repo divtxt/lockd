@@ -1,23 +1,16 @@
 package raftlock_test
 
 import (
+	"testing"
+
 	"github.com/divtxt/lockd/raftlock"
 	"github.com/divtxt/raft"
+	raft_committer "github.com/divtxt/raft/committer"
 	raft_log "github.com/divtxt/raft/log"
-	"testing"
 )
 
-type Simple_ICM_AppendCommand struct {
-	rl     raft.Log
-	termNo raft.TermNo
-}
-
-func (sicmac *Simple_ICM_AppendCommand) AppendCommand(command raft.Command) (raft.LogIndex, error) {
-	entry := raft.LogEntry{sicmac.termNo, command}
-	return sicmac.rl.AppendEntry(entry)
-}
-
 func TestRaftLock(t *testing.T) {
+	// Real log for testing
 	var raftLog raft.Log = raft_log.NewInMemoryLog()
 	for logIndex := 1; logIndex <= 101; logIndex++ {
 		entry := raft.LogEntry{raft.TermNo(logIndex / 10), []byte{}}
@@ -31,18 +24,25 @@ func TestRaftLock(t *testing.T) {
 		t.Fatal(iole)
 	}
 
-	raftICMAC := &Simple_ICM_AppendCommand{raftLog, 11}
-
+	// Create RaftLock instance.
 	rl := raftlock.NewRaftLock(
-		raftICMAC,
 		raftLog,
 		[]string{"bar"},
 		101,
 	)
-	rlCommitApplier := rl.TestHelperGetCommitApplier()
-	rlCommitApplier.StopSync()
-	rlCommitApplier.TestHelperFakeRestart()
 
+	// Create (partial) ConsensusModule.
+	// Simplify testing by not using a full ConsensusModule but by using some parts.
+	micmaco := NewMockICMACO(raftLog, 11, rl)
+	// Use a real Committer in test mode to drive commits.
+	committer := raft_committer.NewCommitter(raftLog, rl)
+	committer.StopSync() // switch to manual control
+	committer.TestHelperGetCommitApplier().TestHelperFakeRestart()
+
+	// Give RaftLock the IConsensusModule_AppendCommandOnly reference.
+	rl.SetICMACO(micmaco)
+
+	//
 	checkLockState := func(name string, ecs bool, eucs bool) {
 		cs, ucs := rl.IsLocked(name)
 		if cs != ecs || ucs != eucs {
@@ -89,11 +89,11 @@ func TestRaftLock(t *testing.T) {
 	checkLockState("bar", true, false)
 
 	// Advance commitIndex by 1 log entry
-	if rlCommitApplier.TestHelperRunOnceIfTriggerPending() {
+	if committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
 		t.Fatal()
 	}
-	rl.CommitIndexChanged(102)
-	if !rlCommitApplier.TestHelperRunOnceIfTriggerPending() {
+	committer.CommitIndexChanged(102)
+	if !committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
 		t.Fatal()
 	}
 	checkLockState("foo", true, true)
@@ -110,8 +110,8 @@ func TestRaftLock(t *testing.T) {
 	chanWillBlock(t, relockBarCommitChan)
 
 	// Advance commitIndex by 2 log entries
-	rl.CommitIndexChanged(104)
-	if !rlCommitApplier.TestHelperRunOnceIfTriggerPending() {
+	committer.CommitIndexChanged(104)
+	if !committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
 		t.Fatal()
 	}
 	checkLockState("foo", true, true)
@@ -134,4 +134,21 @@ func chanHasValue(t *testing.T, c <-chan struct{}) {
 	default:
 		t.Fatal()
 	}
+}
+
+// ---- Mock IConsensusModule_AppendCommandOnly
+
+type MockICMACO struct {
+	rl     raft.Log
+	termNo raft.TermNo
+	sm     raft.StateMachine
+}
+
+func NewMockICMACO(rl raft.Log, termNo raft.TermNo, sm raft.StateMachine) *MockICMACO {
+	return &MockICMACO{rl, termNo, sm}
+}
+
+func (micmaco *MockICMACO) AppendCommand(command raft.Command) (raft.LogIndex, error) {
+	entry := raft.LogEntry{micmaco.termNo, command}
+	return micmaco.rl.AppendEntry(entry)
 }
