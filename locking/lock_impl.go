@@ -1,13 +1,14 @@
 package locking
 
 import (
+	"time"
+
 	"github.com/divtxt/lockd/raftlock"
 	"github.com/divtxt/raft"
 	raft_config "github.com/divtxt/raft/config"
 	raft_impl "github.com/divtxt/raft/impl"
 	raft_log "github.com/divtxt/raft/log"
 	raft_rps "github.com/divtxt/raft/rps"
-	"time"
 )
 
 const (
@@ -33,10 +34,19 @@ func NewLockApiImpl() (*raftlock.RaftLock, error) {
 		return nil, err
 	}
 
+	// -- Make the LockApi
+
+	raftLock := raftlock.NewRaftLock(
+		raftLog,
+		[]string{}, // no initial locks
+		0,          // initialCommitIndex
+	)
+
 	// -- Create the raft ConsensusModule
 	raftCm, err := raft_impl.NewConsensusModule(
 		raftPersistentState,
 		raftLog,
+		raftLock,
 		nil, // should not actually need RpcService for single-node
 		clusterInfo,
 		MaxEntriesPerAppendEntry,
@@ -46,16 +56,8 @@ func NewLockApiImpl() (*raftlock.RaftLock, error) {
 		return nil, err
 	}
 
-	// -- Make the LockApi
-
-	raftLock := raftlock.NewRaftLock(
-		raftCm,
-		raftLog,
-		[]string{}, // no initial locks
-		0,          // initialCommitIndex
-	)
-
-	raftCm.Start(raftLock)
+	// Give RaftLock the IConsensusModule_AppendCommandOnly reference.
+	raftLock.SetICMACO(raftCm)
 
 	return raftLock, nil
 }

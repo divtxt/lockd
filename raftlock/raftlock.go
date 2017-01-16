@@ -2,7 +2,7 @@ package raftlock
 
 import (
 	"fmt"
-	"github.com/divtxt/lockd/runner"
+
 	"github.com/divtxt/lockd/statemachine"
 	"github.com/divtxt/raft"
 )
@@ -10,58 +10,52 @@ import (
 // Raft-commit driven lock.
 type RaftLock struct {
 	// Raft things
-	raftICMAC ICM_AppendCommand
-	raftLog   raft.LogReadOnly
+	raftICMACO raft.IConsensusModule_AppendCommandOnly
+	raftLog    raft.LogReadOnly
 
 	// Lock state
 	committedLocks   statemachine.LockStateMachine
 	uncommittedLocks statemachine.LockStateMachine
-
-	// Commit state
-	commitIndex        raft.LogIndex
-	appliedCommitIndex raft.LogIndex
-	commitApplier      *runner.TriggeredRunner
+	lastApplied      raft.LogIndex
 
 	// Reply channels
 	replyChans map[raft.LogIndex]chan struct{}
 }
 
-// The subset of the Consensus interface that RaftLock cares about:
-type ICM_AppendCommand interface {
-	AppendCommand(command raft.Command) (raft.LogIndex, error)
-}
-
 // Construct a new RaftLock.
 //
-// It is expected that raft.ConsensusModule.Start() will be called later using the
-// returned RaftLock as the raft.ChangeListener parameter.
+// The RaftLock setup is incomplete until SetICMACO() is called with the raft ConsensusModule.
 //
 func NewRaftLock(
-	raftICMAC ICM_AppendCommand,
 	raftLog raft.LogReadOnly,
 	initialLocks []string,
-	initialCommitIndex raft.LogIndex,
+	initialLastApplied raft.LogIndex,
 ) *RaftLock {
 
 	// TODO: copy initial state
 	rl := &RaftLock{
-		raftICMAC,
+		nil, // raftICMACO
 		raftLog,
 		statemachine.NewInMemoryLSM(),
 		statemachine.NewInMemoryLSM(),
-		initialCommitIndex,
-		initialCommitIndex,
-		nil, // commitApplier
+		initialLastApplied,
 		make(map[raft.LogIndex]chan struct{}),
 	}
 
 	applyLocks(initialLocks, rl.committedLocks)
 	applyLocks(initialLocks, rl.uncommittedLocks)
 
-	// Start commitApplier goroutine
-	rl.commitApplier = runner.NewTriggeredRunner(rl.applyPendingCommits)
-
 	return rl
+}
+
+func (rl *RaftLock) SetICMACO(raftICMACO raft.IConsensusModule_AppendCommandOnly) {
+	if rl.raftICMACO != nil {
+		panic("Attempt to set raftICMACO more than once!")
+	}
+	if raftICMACO == nil {
+		panic("SetICMACO() called with nil!")
+	}
+	rl.raftICMACO = raftICMACO
 }
 
 // ---- API
@@ -109,7 +103,7 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 	if err != nil {
 		panic(err) // FIXME: non-panic error handling
 	}
-	logIndex, err := rl.raftICMAC.AppendCommand(command)
+	logIndex, err := rl.raftICMACO.AppendCommand(command)
 	if err != nil {
 		panic(err) // FIXME: non-panic error handling
 	}
@@ -152,7 +146,7 @@ func (rl *RaftLock) Unlock(name string) <-chan struct{} {
 	if err != nil {
 		panic(err) // FIXME: non-panic error handling
 	}
-	logIndex, err := rl.raftICMAC.AppendCommand(command)
+	logIndex, err := rl.raftICMACO.AppendCommand(command)
 	if err != nil {
 		panic(err) // FIXME: non-panic error handling
 	}
@@ -166,22 +160,47 @@ func (rl *RaftLock) Unlock(name string) <-chan struct{} {
 	return rl.makeReplyChan(logIndex)
 }
 
-// Receive raft commit index changes.
-//
-// Commit are applied asynchronously.
-func (rl *RaftLock) CommitIndexChanged(commitIndex raft.LogIndex) {
+// ---- Implement raft.StateMachine interface
+
+// GetLastApplied should return the value of lastApplied.
+func (rl *RaftLock) GetLastApplied() raft.LogIndex {
+	return rl.lastApplied
+}
+
+// ApplyCommand should apply the given command to the state machine.
+func (rl *RaftLock) ApplyCommand(logIndex raft.LogIndex, command raft.Command) {
 	// FIXME: mutex
 
-	// Check commitIndex is not going backward
-	if rl.commitIndex > commitIndex {
-		panic(fmt.Sprintf("FATAL: decreasing commitIndex: %v > %v", rl.commitIndex, commitIndex))
+	// Check lastApplied is not going backward
+	if rl.lastApplied > logIndex {
+		panic(fmt.Sprintf("FATAL: decreasing lastApplied: %v > %v", rl.lastApplied, logIndex))
 	}
 
-	// Trigger application of committed entries
-	rl.commitApplier.TriggerRun()
+	// Deserialize the command
+	cmd, err := lockActionDeserialize(command)
+	if err != nil {
+		panic(err)
+	}
 
-	// Update commitIndex
-	rl.commitIndex = commitIndex
+	// Apply to committedLocks
+	name := cmd.Name
+	if cmd.Lock {
+		lockSuccess := rl.committedLocks.Lock(name)
+		if !lockSuccess {
+			panic(fmt.Sprintf("FATAL: committedLocks.Lock() unexpectedly already locked: %v", name))
+		}
+	} else {
+		unlockSuccess := rl.committedLocks.Unlock(name)
+		if !unlockSuccess {
+			panic(fmt.Sprintf("FATAL: committedLocks.Unlock() unexpectedly not locked: %v", name))
+		}
+	}
+
+	// Update lastApplied
+	rl.lastApplied = logIndex
+
+	// Send reply for rl.appliedCommitIndex
+	rl.sendReply(logIndex)
 }
 
 // ---- Private
@@ -213,65 +232,4 @@ func (rl *RaftLock) sendReply(logIndex raft.LogIndex) {
 	}
 	delete(rl.replyChans, logIndex)
 	replyChan <- struct{}{}
-}
-
-// Apply all pending committed entries and notify callers via replyChans.
-//
-// Does nothing if there are no committed entries to apply.
-func (rl *RaftLock) applyPendingCommits() {
-	// FIXME: mutex
-
-	for rl.appliedCommitIndex < rl.commitIndex {
-		rl.applyOnePendingCommit()
-	}
-
-}
-
-// Apply one commit
-func (rl *RaftLock) applyOnePendingCommit() {
-	// FIXME: mutex
-
-	if rl.appliedCommitIndex >= rl.commitIndex {
-		return
-	}
-
-	indexToApply := rl.appliedCommitIndex + 1
-
-	// Get one command from the raft log
-	// TODO: get and apply multiple entries at a time
-	entries, err := rl.raftLog.GetEntriesAfterIndex(indexToApply-1, 1)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
-
-	// Deserialize the command
-	cmd, err := lockActionDeserialize(entries[0].Command)
-	if err != nil {
-		panic(err) // FIXME: non-panic error handling
-	}
-
-	// Apply to committedLocks
-	name := cmd.Name
-	if cmd.Lock {
-		lockSuccess := rl.committedLocks.Lock(name)
-		if !lockSuccess {
-			panic(fmt.Sprintf("FATAL: committedLocks.Lock() unexpectedly already locked: %v", name))
-		}
-	} else {
-		unlockSuccess := rl.committedLocks.Unlock(name)
-		if !unlockSuccess {
-			panic(fmt.Sprintf("FATAL: committedLocks.Unlock() unexpectedly not locked: %v", name))
-		}
-	}
-
-	// Send reply for rl.appliedCommitIndex
-	rl.sendReply(indexToApply)
-
-	// Update state
-	rl.appliedCommitIndex = indexToApply
-}
-
-// Meant only for tests!
-func (rl *RaftLock) TestHelperGetCommitApplier() *runner.TriggeredRunner {
-	return rl.commitApplier
 }
