@@ -1,6 +1,8 @@
 
 # lockd
 
+[![Build Status](https://travis-ci.org/divtxt/lockd.svg?branch=master)](https://travis-ci.org/divtxt/lockd)
+
 A distributed lock service.
 
 See [API.md](API.md) for server API documentation.
