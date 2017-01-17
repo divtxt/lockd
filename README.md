@@ -67,7 +67,7 @@ Lock Features:
 
 Integration Testing:
 
-- [ ] External test script
+- [x] External test script
 - [ ] Travis runs server and test script
 
 Lock State Persistence:

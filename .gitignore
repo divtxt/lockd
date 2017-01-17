@@ -25,3 +25,6 @@ _testmain.go
 
 # lockd binary
 /lockd
+
+# python compiled files
+pyclient/*.pyc
