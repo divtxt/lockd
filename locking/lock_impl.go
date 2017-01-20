@@ -29,7 +29,7 @@ func NewLockApiImpl() (*raftlock.RaftLock, error) {
 
 	timeSettings := raft_config.TimeSettings{TickerDuration, ElectionTimeoutLow}
 
-	clusterInfo, err := raft_config.NewClusterInfo([]raft.ServerId{"_SOLO_"}, "_SOLO_")
+	clusterInfo, err := raft_config.NewClusterInfo([]raft.ServerId{1}, 1)
 	if err != nil {
 		return nil, err
 	}
