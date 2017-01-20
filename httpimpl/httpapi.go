@@ -2,9 +2,9 @@ package httpimpl
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AddLockApiEndpoints(e *gin.Engine, lockApi LockApi) {
@@ -21,7 +21,6 @@ func makeLockHandler(lockApi LockApi) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var lockRequest LockRequest
 		if err := c.Bind(&lockRequest); err == nil {
-			log.Printf("Attempt to lock: %q", lockRequest.Name)
 			commitChan := lockApi.Lock(lockRequest.Name)
 			if commitChan != nil {
 				<-commitChan // FIXME: add timeout!
@@ -39,7 +38,6 @@ func makeUnlockHandler(lockApi LockApi) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var lockRequest LockRequest
 		if err := c.Bind(&lockRequest); err == nil {
-			log.Printf("Attempt to unlock: %q", lockRequest.Name)
 			commitChan := lockApi.Unlock(lockRequest.Name)
 			if commitChan != nil {
 				<-commitChan // FIXME: add timeout!
