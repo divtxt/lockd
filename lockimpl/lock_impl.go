@@ -1,4 +1,4 @@
-package locking
+package lockimpl
 
 import (
 	"time"

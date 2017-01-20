@@ -6,7 +6,7 @@ import (
 
 	"github.com/divtxt/lockd/ginx"
 	"github.com/divtxt/lockd/httpimpl"
-	"github.com/divtxt/lockd/locking"
+	"github.com/divtxt/lockd/lockimpl"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +24,7 @@ func main() {
 	// Instantiate a lock service
 	var l httpimpl.LockApi
 	var err error
-	l, err = locking.NewLockApiImpl()
+	l, err = lockimpl.NewLockApiImpl()
 	if err != nil {
 		panic(err)
 	}
