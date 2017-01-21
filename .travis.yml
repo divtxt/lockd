@@ -7,3 +7,7 @@ install:
 script:
   - go test ./...
   - errcheck ./...
+  - |
+    go run main.go &
+    sleep 2
+    python pyclient/integtest.py
