@@ -11,7 +11,9 @@ See [API.md](API.md) for server API documentation.
 
 Run using:
 
-    go run main.go
+```
+go run main.go
+```
 
 Then, run the following commands in another terminal:
 
@@ -58,12 +60,16 @@ Basic Single-Node Locking:
 
 Lock Features:
 
-- [ ] API timeouts
-- [ ] Field content and size limit checks
 - [ ] Lock status query API
 - [ ] Lock request/client id field
 - [ ] Request/client id override
 - [ ] Lock acquire wait time
+
+Error Handling:
+
+- [ ] Internal error shows original stack trace
+- [ ] API timeouts
+- [ ] Field content and size limit checks
 
 Integration Testing:
 
