@@ -60,7 +60,7 @@ Basic Single-Node Locking:
 
 Lock Features:
 
-- [ ] Lock status query API
+- [x] Lock status query API
 - [ ] Lock request/client id field
 - [ ] Request/client id override
 - [ ] Lock acquire wait time
