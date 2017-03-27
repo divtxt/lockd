@@ -51,6 +51,14 @@ curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/un
 protoc -I lockapi/ lockapi/locking.proto --go_out=plugins=grpc:lockapi
 ```
 
+The Python grpc code was generated using the following command:
+
+```
+cd pyclient
+python -m grpc_tools.protoc -I../lockapi --python_out=. --grpc_python_out=. ../lockapi/locking.proto
+```
+
+
 
 ## TODO
 
