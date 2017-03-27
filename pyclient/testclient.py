@@ -4,8 +4,10 @@ from lockd import LockdClient
 
 lockd_client = LockdClient()
 
-print "lock('foo') ->", lockd_client.lock("foo")
+print "Lock('foo') ->", lockd_client.Lock("foo")
 
-print "lock('foo') ->", lockd_client.lock("foo")
+print "Lock('foo') ->", lockd_client.Lock("foo")
 
-print "unlock('foo') ->", lockd_client.unlock("foo")
+print "IsLocked('foo') ->", lockd_client.IsLocked("foo")
+
+print "Unlock('foo') ->", lockd_client.Unlock("foo")

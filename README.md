@@ -51,11 +51,35 @@ curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/un
 protoc -I lockapi/ lockapi/locking.proto --go_out=plugins=grpc:lockapi
 ```
 
-The Python grpc code was generated using the following command:
+### Python Development
+
+These notes use *pip*, *virtualenv*, and *pipenv*. Feel free to adapt/modify for your preferred tools/style.
+
+- Install *pip*, *virtualenv* and *pipenv* (one-time global setup)
+
+```
+sudo easy_install pip
+sudo pip install virtualenv
+sudo pip install pipenv --ignore-installed six
+```
+
+- Install required packages
 
 ```
 cd pyclient
-python -m grpc_tools.protoc -I../lockapi --python_out=. --grpc_python_out=. ../lockapi/locking.proto
+pipenv install
+```
+
+- Run sample python client
+
+```
+pipenv run python testclient.py
+```
+
+- To generate the Python grpc code:
+
+```
+pipenv run python -m grpc_tools.protoc -I../lockapi --python_out=. --grpc_python_out=. ../lockapi/locking.proto
 ```
 
 
