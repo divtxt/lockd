@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package locking;
+
+// Lock interface.
+service Locking {
+  // Check if the given entry is locked.
+  rpc IsLocked(LockName) returns (LockState) {}
+
+  // Lock the given entry.
+  rpc Lock(LockName) returns (LockResult) {}
+
+  // Unlock the given entry.
+  rpc Unlock(LockName) returns (LockResult) {}
+}
+
+message LockName {
+  string name = 1;
+}
+
+message LockState {
+  string name = 1;
+  bool is_locked = 2;
+}
+
+message LockResult {
+  bool success = 1;
+}

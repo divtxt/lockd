@@ -7,7 +7,7 @@ A distributed lock service.
 
 See [API.md](API.md) for server API documentation.
 
-## Development
+## Development Quick Start
 
 Run using:
 
@@ -38,6 +38,17 @@ To unlock the entry:
 ```
 curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/unlock \
     -d '{"name":"Foo"}'
+```
+
+
+## Development Notes
+
+### gRPC & generated code
+
+*lockd* uses [gRPC](http://www.grpc.io/) for cross-server communication. The generated code is checked into source control so you do not have to generate the code yourself unless you're changing the interface or the code generation tooling. The command used to generate the code is:
+
+```
+protoc -I lockapi/ lockapi/locking.proto --go_out=plugins=grpc:lockapi
 ```
 
 
