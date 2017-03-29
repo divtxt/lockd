@@ -7,6 +7,7 @@ language: go
 install:
   - go get -t ./...
   - go get -u github.com/kisielk/errcheck
+  - sudo pip install grpcio # FIXME: use pipenv install
 
 script:
   - go test ./...
