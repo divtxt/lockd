@@ -7,55 +7,26 @@ A distributed lock service.
 
 See [API.md](API.md) for server API documentation.
 
-## Development Quick Start
+## Development
 
-Run using:
+### Run the server
+
+- (One-time global setup:) install and configure Go
+
+- Clone the repository
+
+- Build and run the server:
 
 ```
+go get -t ./...
 go run main.go
 ```
 
-Then, run the following commands in another terminal:
+### Test using the python client
 
-Lock an entry:
+In another terminal, setup python dependencies and run the python client:
 
-```
-curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/lock \
-    -d '{"name":"Foo"}'
-```
-
-Try to lock the same name again and you should get a 409 Conflict error.
-
-
-To check if an entry is locked:
-
-```
-curl -i http://127.0.0.1:2080/api/lock?name=Foo
-```
-
-To unlock the entry:
-
-```
-curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/unlock \
-    -d '{"name":"Foo"}'
-```
-
-
-## Development Notes
-
-### gRPC & generated code
-
-*lockd* uses [gRPC](http://www.grpc.io/) for cross-server communication. The generated code is checked into source control so you do not have to generate the code yourself unless you're changing the interface or the code generation tooling. The command used to generate the code is:
-
-```
-protoc -I lockapi/ lockapi/lockapi.proto --go_out=plugins=grpc:lockapi
-```
-
-### Python Development
-
-These notes use *pip*, *virtualenv*, and *pipenv*. Feel free to adapt/modify for your preferred tools/style.
-
-- Install *pip*, *virtualenv* and *pipenv* (one-time global setup)
+- (One-time global setup:) Install *pip*, *virtualenv* and *pipenv* (or use your preferred style)
 
 ```
 sudo easy_install pip
@@ -70,18 +41,37 @@ cd pyclient
 pipenv install
 ```
 
-- Run sample python client
+- Try the sample python client:
 
 ```
-pipenv run python testclient.py
+~/wgo/src/github.com/divtxt/lockd/pyclient$ pipenv run python
+Python 2.7.10 (default, Oct 23 2015, 19:19:21)
+[GCC 4.2.1 Compatible Apple LLVM 7.0.0 (clang-700.0.59.5)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from lockd import LockdClient
+>>> lockd_client = LockdClient()
+>>> lockd_client.Lock("foo")
+True
+>>> lockd_client.IsLocked("foo")
+True
+>>> lockd_client.Unlock("foo")
+True
+```
+
+### gRPC & generated code
+
+*lockd* uses [gRPC](http://www.grpc.io/) for cross-server communication. The generated code is checked into source control so you do not have to generate the code yourself unless you're changing the interface or the code generation tooling. The command used to generate the code is:
+
+```
+protoc -I lockapi/ lockapi/lockapi.proto --go_out=plugins=grpc:lockapi
 ```
 
 - To generate the Python grpc code:
 
 ```
+cd pyclient
 pipenv run python -m grpc_tools.protoc -I../lockapi --python_out=. --grpc_python_out=. ../lockapi/lockapi.proto
 ```
-
 
 
 ## TODO
@@ -149,14 +139,14 @@ Multi-Node Locking:
 
 Clients:
 
-- [ ] Ruby client
-- [ ] Python client
-- [ ] Java/Scala client
+- [ ] Go client in separate repo
+- [ ] Published Python client
+- [ ] Published Ruby client
 
 Servers:
 
-- [ ] Homebrew installable binary
-- [ ] Linux binary
+- [ ] Homebrew package
+- [ ] Ubuntu/Debian package
 
 Misc:
 
