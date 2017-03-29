@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"log"
+	"net"
 
-	"github.com/divtxt/lockd/ginx"
-	"github.com/divtxt/lockd/httpimpl"
+	"google.golang.org/grpc"
+
+	"github.com/divtxt/lockd/lockapi"
 	"github.com/divtxt/lockd/lockimpl"
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -18,28 +19,26 @@ func main() {
 	// Reset standard log flags (undo Gin's settings)
 	log.SetFlags(log.LstdFlags)
 
-	// Disable Gin debug logging
-	gin.SetMode(gin.ReleaseMode)
-
 	// Instantiate a lock service
-	var l httpimpl.LockApi
+	var ilApi lockimpl.InternalLockApi
 	var err error
-	l, err = lockimpl.NewLockApiImpl()
+	ilApi, err = lockimpl.NewLockApiImpl()
 	if err != nil {
 		panic(err)
 	}
+	lockingServer := lockimpl.NewLockingServerImpl(ilApi)
 
-	// Configure http service
-	r := gin.New()
-	r.Use(ginx.StdLogLogger())
-	r.Use(ginx.StdLogRepanic())
-
-	httpimpl.AddLockApiEndpoints(r, l)
-
-	// Run forever / till stopped
-	log.Println("Starting server on address:", *listenAddrPtr)
-	err = r.Run(*listenAddrPtr)
+	// Setup network service
+	lis, err := net.Listen("tcp", *listenAddrPtr)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	lockapi.RegisterLockingServer(s, lockingServer)
+
+	// Run forever
+	log.Println("Starting server on address:", *listenAddrPtr)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
 	}
 }

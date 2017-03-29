@@ -18,7 +18,6 @@ const (
 	ElectionTimeoutLow = 150 * time.Millisecond
 )
 
-// Implementation of locking.LockApi
 func NewLockApiImpl() (*raftlock.RaftLock, error) {
 
 	// --  Prepare raft ConsensusModule parameters
@@ -34,7 +33,7 @@ func NewLockApiImpl() (*raftlock.RaftLock, error) {
 		return nil, err
 	}
 
-	// -- Make the LockApi
+	// -- Make the RaftLock
 
 	raftLock := raftlock.NewRaftLock(
 		raftLog,
