@@ -48,7 +48,7 @@ curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/un
 *lockd* uses [gRPC](http://www.grpc.io/) for cross-server communication. The generated code is checked into source control so you do not have to generate the code yourself unless you're changing the interface or the code generation tooling. The command used to generate the code is:
 
 ```
-protoc -I lockapi/ lockapi/locking.proto --go_out=plugins=grpc:lockapi
+protoc -I lockapi/ lockapi/lockapi.proto --go_out=plugins=grpc:lockapi
 ```
 
 ### Python Development
@@ -79,7 +79,7 @@ pipenv run python testclient.py
 - To generate the Python grpc code:
 
 ```
-pipenv run python -m grpc_tools.protoc -I../lockapi --python_out=. --grpc_python_out=. ../lockapi/locking.proto
+pipenv run python -m grpc_tools.protoc -I../lockapi --python_out=. --grpc_python_out=. ../lockapi/lockapi.proto
 ```
 
 

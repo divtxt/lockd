@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package locking;
+package lockapi;
 
 // Lock interface.
 service Locking {
