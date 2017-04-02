@@ -60,13 +60,23 @@ True
 
 ### gRPC & generated code
 
-*lockd* uses [gRPC](http://www.grpc.io/) for cross-server communication. The generated code is checked into source control so you do not have to generate the code yourself unless you're changing the interface or the code generation tooling. The command used to generate the code is:
+*lockd* uses [gRPC](http://www.grpc.io/) for cross-server communication. The generated code is checked into source control so you do not have to generate the code yourself unless you're changing the interface or the code generation tooling.
+
+If you want to change the code and regenerate code, do the following:
+
+- Install [Protocol Buffers](https://developers.google.com/protocol-buffers/) - e.g:
+
+```
+brew install protobuf
+```
+
+- Generate the Go grpc code:
 
 ```
 protoc -I lockapi/ lockapi/lockapi.proto --go_out=plugins=grpc:lockapi
 ```
 
-- To generate the Python grpc code:
+- Generate the Python grpc code:
 
 ```
 cd pyclient
@@ -100,7 +110,6 @@ Lock Features:
 
 Error Handling:
 
-- [ ] Internal error shows original stack trace
 - [ ] API timeouts
 - [ ] Field content and size limit checks
 
@@ -108,6 +117,7 @@ Integration Testing:
 
 - [x] External test script
 - [x] Travis runs server and test script
+- [ ] Travis build checks codegen
 
 Lock State Persistence:
 
