@@ -5,34 +5,63 @@
 
 A distributed lock service.
 
-See [API.md](API.md) for server API documentation.
 
 ## Development
 
 Run using:
 
 ```
+go get -t ./...
 go run main.go
 ```
 
-Then, run the following commands in another terminal:
 
-Lock an entry:
+## Lock API
 
-```
-curl -i -X POST http://localhost:2080/lock/foo
-```
+The lock service has a REST-ful interface: every lock is a resource at the path `/lock/:name`:
 
-Try to lock the same name again and you should get a 409 Conflict error.
+### GET /lock/:name
 
+Check if the given entry is locked.
 
-To check if an entry is locked:
+This will return one of the following status codes:
+
+- `200 OK` - Entry is locked.
+- `404 Not Found` - Entry is unlocked.
+
+Example:
 
 ```
 curl -i http://localhost:2080/lock/foo
 ```
 
-To unlock the entry:
+
+### POST /lock/:name
+
+Lock the given entry.
+
+This will return one of the following status codes:
+
+- `200 OK` - Success - entry is now locked.
+- `409 Conflict` - Failed - entry is locked.
+
+Example:
+
+```
+curl -i -X POST http://localhost:2080/lock/foo
+```
+
+
+### DELETE /lock/:name
+
+Unlock the given entry.
+
+This will return one of the following status codes:
+
+- `200 OK` - Success - entry is now locked.
+- `409 Conflict` - Failed - entry is locked.
+
+Example:
 
 ```
 curl -i -X DELETE http://localhost:2080/lock/foo
