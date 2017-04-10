@@ -20,8 +20,7 @@ Then, run the following commands in another terminal:
 Lock an entry:
 
 ```
-curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/lock \
-    -d '{"name":"Foo"}'
+curl -i -X POST http://localhost:2080/lock/foo
 ```
 
 Try to lock the same name again and you should get a 409 Conflict error.
@@ -30,14 +29,13 @@ Try to lock the same name again and you should get a 409 Conflict error.
 To check if an entry is locked:
 
 ```
-curl -i http://127.0.0.1:2080/api/lock?name=Foo
+curl -i http://localhost:2080/lock/foo
 ```
 
 To unlock the entry:
 
 ```
-curl -i -H "Content-Type: application/json" -X POST http://127.0.0.1:2080/api/unlock \
-    -d '{"name":"Foo"}'
+curl -i -X DELETE http://localhost:2080/lock/foo
 ```
 
 
