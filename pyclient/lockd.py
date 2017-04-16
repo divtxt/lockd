@@ -33,5 +33,5 @@ class LockdClient(object):
         elif status == false_code:
             return False
         else:
-            msg = "Unexpected response: %s %s; data: %s" % (status, response.reason, data)
+            msg = "Unexpected response: %s %s" % (status, response.reason)
             raise Exception(msg)
