@@ -16,11 +16,17 @@ func NewInMemoryLSM() *InMemoryLSM {
 // --- Implement LockStateMachine
 
 func (iml *InMemoryLSM) IsLocked(name string) bool {
+	if e := IsValidName(name); e != "" {
+		panic(e)
+	}
 	_, hasKey := iml.locks[name]
 	return hasKey
 }
 
 func (iml *InMemoryLSM) Lock(name string) bool {
+	if e := IsValidName(name); e != "" {
+		panic(e)
+	}
 	// if already locked return false
 	if _, hasKey := iml.locks[name]; hasKey {
 		return false
@@ -31,6 +37,9 @@ func (iml *InMemoryLSM) Lock(name string) bool {
 }
 
 func (iml *InMemoryLSM) Unlock(name string) bool {
+	if e := IsValidName(name); e != "" {
+		panic(e)
+	}
 	// if not locked return false
 	if _, hasKey := iml.locks[name]; !hasKey {
 		return false
