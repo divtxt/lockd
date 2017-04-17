@@ -41,25 +41,32 @@ func TestInMemoryLSM(t *testing.T) {
 	lsm_Unlock("foo", true)
 	lsm_Unlock("bar", false)
 
+	// all printable ascii
+	lsm_IsLocked(sampleAllPrintableAscii, false)
+	lsm_Lock(sampleAllPrintableAscii, true)
+	lsm_IsLocked(sampleAllPrintableAscii, true)
+	lsm_Unlock(sampleAllPrintableAscii, true)
+	lsm_IsLocked(sampleAllPrintableAscii, false)
+
 	// bad names should panic
 	testhelpers.TestHelper_ExpectPanic(
 		t,
 		func() { lsm.IsLocked("") },
-		"Name is blank",
+		"Name is empty string",
 	)
 	testhelpers.TestHelper_ExpectPanic(
 		t,
 		func() { lsm.Lock("") },
-		"Name is blank",
+		"Name is empty string",
 	)
 	testhelpers.TestHelper_ExpectPanic(
 		t,
 		func() { lsm.IsLocked(sampleNihongo) },
-		"Name is not printable ASCII",
+		"Name contains non-printable/non-ascii byte 230 at offset 0",
 	)
 	testhelpers.TestHelper_ExpectPanic(
 		t,
 		func() { lsm.Unlock(sampleInvalidUtf8) },
-		"Name is not printable ASCII",
+		"Name contains non-printable/non-ascii byte 189 at offset 0",
 	)
 }

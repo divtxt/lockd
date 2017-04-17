@@ -1,40 +1,34 @@
 package statemachine
 
+import (
+	"fmt"
+)
+
 // NameLenMaxBytes is the maximum number of bytes allowed in a lock name.
 const NameLenMaxBytes = 128
 
-// IsValidName checks if the given name is a valid lock name.
+// IsValidLockName checks if the given name is a valid lock name.
 //
-// Returns blank string if names is valid or message describing why lock name is invalid.
+// Returns blank string if names is valid or string message describing why name is invalid.
 //
-// The current implementation requires that a lock name must be:
-// - non-empty string
-// - at most NameLenMaxBytes bytes long
-// - printable ascii as checked by IsPrintableASCII().
+// Lock names must satisfy the following conditions:
+// - must be printable ascii (byte values 32 to 126)
+// - must not be empty string
+// - must not be longer than NameLenMaxBytes bytes
 //
-func IsValidName(name string) string {
-	if name == "" {
-		return "Name is blank"
+func IsValidLockName(name string) string {
+	l := len(name)
+	if l == 0 {
+		return "Name is empty string"
 	}
-	if len(name) > NameLenMaxBytes {
-		return "Name is too long"
+	if l > NameLenMaxBytes {
+		return fmt.Sprintf("Name is too long (%v bytes > max of %v)", l, NameLenMaxBytes)
 	}
-	if !IsPrintableASCII(name) {
-		return "Name is not printable ASCII"
-	}
-	return ""
-}
-
-// IsPrintableASCII checks if the given string contains only printable ASCII characters.
-//
-// Printable ASCII is defined as byte values 32 to 126.
-//
-func IsPrintableASCII(s string) bool {
-	for i := 0; i < len(s); i++ {
-		c := s[i]
+	for i := 0; i < l; i++ {
+		c := name[i]
 		if c < 32 || c > 126 {
-			return false
+			return fmt.Sprintf("Name contains non-printable/non-ascii byte %v at offset %v", c, i)
 		}
 	}
-	return true
+	return ""
 }
