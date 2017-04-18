@@ -1,5 +1,9 @@
 package statemachine
 
+import (
+	"github.com/divtxt/lockd/util"
+)
+
 // An in-memory implementation of LockStateMachine.
 //
 // This implementation is NOT concurrent safe.
@@ -16,7 +20,7 @@ func NewInMemoryLSM() *InMemoryLSM {
 // --- Implement LockStateMachine
 
 func (iml *InMemoryLSM) IsLocked(name string) bool {
-	if e := IsValidLockName(name); e != "" {
+	if e := util.IsValidLockName(name); e != "" {
 		panic(e)
 	}
 	_, hasKey := iml.locks[name]
@@ -24,7 +28,7 @@ func (iml *InMemoryLSM) IsLocked(name string) bool {
 }
 
 func (iml *InMemoryLSM) Lock(name string) bool {
-	if e := IsValidLockName(name); e != "" {
+	if e := util.IsValidLockName(name); e != "" {
 		panic(e)
 	}
 	// if already locked return false
@@ -37,7 +41,7 @@ func (iml *InMemoryLSM) Lock(name string) bool {
 }
 
 func (iml *InMemoryLSM) Unlock(name string) bool {
-	if e := IsValidLockName(name); e != "" {
+	if e := util.IsValidLockName(name); e != "" {
 		panic(e)
 	}
 	// if not locked return false

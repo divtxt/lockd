@@ -1,13 +1,12 @@
-package statemachine_test
+package util_test
 
 import (
 	"strings"
 	"testing"
 
-	. "github.com/divtxt/lockd/statemachine"
+	. "github.com/divtxt/lockd/util"
 )
 
-const sampleAllPrintableAscii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 const sampleNihongo = "日本語"
 const sampleInvalidUtf8 = "\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"
 
@@ -16,12 +15,12 @@ func TestIsValidLockName(t *testing.T) {
 	// -- valid names:
 
 	// random ascii string
-	if e := IsValidLockName("hello, world!"); e != "" {
+	if e := IsValidLockName("Hello123"); e != "" {
 		t.Error(e)
 	}
 
-	// all printable from 32 to 126 ascii
-	if e := IsValidLockName(sampleAllPrintableAscii); e != "" {
+	// all valid chars
+	if e := IsValidLockName(NameValidChars); e != "" {
 		t.Error(e)
 	}
 
@@ -40,6 +39,11 @@ func TestIsValidLockName(t *testing.T) {
 
 	// ascii control character
 	if e := IsValidLockName("a\nb\n"); e != "Name contains non-printable/non-ascii byte 10 at offset 1" {
+		t.Error(e)
+	}
+
+	// unallowed printable ascii character
+	if e := IsValidLockName("A++"); e != "Name contains non-printable/non-ascii byte 43 at offset 1" {
 		t.Error(e)
 	}
 
