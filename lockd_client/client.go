@@ -3,6 +3,7 @@ package lockd_client
 import (
 	"fmt"
 	"net/http"
+	net_url "net/url"
 )
 
 type LockdClient struct {
@@ -30,8 +31,8 @@ func (lc *LockdClient) Unlock(name string) (bool, error) {
 }
 
 func (lc *LockdClient) lockish(method string, name string, falseCode int) (bool, error) {
-	// FIXME: does name need to escaped here?
-	url := fmt.Sprintf("http://%s:%d/lock/%s", lc.host, lc.port, name)
+	escapedName := net_url.PathEscape(name)
+	url := fmt.Sprintf("http://%s:%d/lock/%s", lc.host, lc.port, escapedName)
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
