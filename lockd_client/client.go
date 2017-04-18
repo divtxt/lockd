@@ -2,6 +2,7 @@ package lockd_client
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	net_url "net/url"
 )
@@ -42,16 +43,22 @@ func (lc *LockdClient) lockish(method string, name string, falseCode int) (bool,
 	if err != nil {
 		return false, err
 	}
-	err = resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	err2 := resp.Body.Close()
 	if err != nil {
 		return false, err
 	}
-
+	if err2 != nil {
+		return false, err2
+	}
 	if resp.StatusCode == 200 {
 		return true, nil
 	}
 	if resp.StatusCode == falseCode {
 		return false, nil
 	}
-	return false, fmt.Errorf("Unexpected response: %s", resp.Status)
+	if resp.StatusCode == 400 {
+		return false, fmt.Errorf("Bad Request: %s", body)
+	}
+	return false, fmt.Errorf("Unexpected response: %s for %s /lock/%s", resp.Status, method, escapedName)
 }
