@@ -14,5 +14,5 @@ script:
   - |
     go run main.go &
     sleep 2
-    go run integtests/main.go
-    python pyclient/integtest.py
+  - go run integtests/main.go
+  - python pyclient/integtest.py
