@@ -34,6 +34,9 @@ func (lc *LockdClient) lockish(method string, name string, falseCode int) (bool,
 	url := fmt.Sprintf("http://%s:%d/lock/%s", lc.host, lc.port, name)
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return false, err
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
