@@ -12,8 +12,8 @@ import (
 const sampleNihongo = "日本語"
 const sampleInvalidUtf8 = "\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"
 
-func BadLockNamesTest() {
-	fmt.Println("BadLockNamesTest")
+func LockNamesTest() {
+	fmt.Println("LockNamesTest")
 
 	lc := lockd_client.NewLockdClient()
 
@@ -28,27 +28,19 @@ func BadLockNamesTest() {
 	longestName := strings.Repeat("a", util.NameLenMaxBytes)
 	assert(lc.IsLocked, longestName, false)
 
-	// // bad names should panic
-	// testhelpers.TestHelper_ExpectPanic(
-	// 	t,
-	// 	func() { lsm.IsLocked("") },
-	// 	"Name is empty string",
-	// )
-	// testhelpers.TestHelper_ExpectPanic(
-	// 	t,
-	// 	func() { lsm.Lock("") },
-	// 	"Name is empty string",
-	// )
-	// testhelpers.TestHelper_ExpectPanic(
-	// 	t,
-	// 	func() { lsm.IsLocked(sampleNihongo) },
-	// 	"Name contains non-printable/non-ascii byte 230 at offset 0",
-	// )
-	// testhelpers.TestHelper_ExpectPanic(
-	// 	t,
-	// 	func() { lsm.Unlock(sampleInvalidUtf8) },
-	// 	"Name contains non-printable/non-ascii byte 189 at offset 0",
-	// )
+	// empty string
+	assertError(
+		lc.Lock,
+		"",
+		"Unexpected response: 404 Not Found for POST /lock/",
+	)
+
+	// invalid chars
+	assertError(
+		lc.Lock,
+		"A++",
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 43 at offset 1\"}\n",
+	)
 
 	// assert(lc.Lock, "", true)
 	// assert(lc.IsLocked, "foo", true)
