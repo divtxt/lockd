@@ -4,6 +4,9 @@ branches:
 
 language: go
 
+go:
+  - 1.8
+
 install:
   - go get -t ./...
   - go get -u github.com/kisielk/errcheck
