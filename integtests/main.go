@@ -6,5 +6,5 @@ import (
 
 func main() {
 	SimpleIntegrationTest()
-	BadLockNamesTest()
+	LockNamesTest()
 }
