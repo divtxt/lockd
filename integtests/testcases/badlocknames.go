@@ -6,10 +6,9 @@ import (
 	"fmt"
 
 	"github.com/divtxt/lockd/lockd_client"
-	"github.com/divtxt/lockd/statemachine"
+	"github.com/divtxt/lockd/util"
 )
 
-const sampleAllPrintableAscii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 const sampleNihongo = "日本語"
 const sampleInvalidUtf8 = "\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"
 
@@ -19,14 +18,14 @@ func BadLockNamesTest() {
 	lc := lockd_client.NewLockdClient()
 
 	// all printable ascii - implicitly tests for "/" in the name
-	assert(lc.IsLocked, sampleAllPrintableAscii, false)
-	assert(lc.Lock, sampleAllPrintableAscii, true)
-	assert(lc.IsLocked, sampleAllPrintableAscii, true)
-	assert(lc.Unlock, sampleAllPrintableAscii, true)
-	assert(lc.IsLocked, sampleAllPrintableAscii, false)
+	assert(lc.IsLocked, util.NameValidChars, false)
+	assert(lc.Lock, util.NameValidChars, true)
+	assert(lc.IsLocked, util.NameValidChars, true)
+	assert(lc.Unlock, util.NameValidChars, true)
+	assert(lc.IsLocked, util.NameValidChars, false)
 
 	// longest name
-	longestName := strings.Repeat("a", statemachine.NameLenMaxBytes)
+	longestName := strings.Repeat("a", util.NameLenMaxBytes)
 	assert(lc.IsLocked, longestName, false)
 
 	// // bad names should panic

@@ -4,15 +4,19 @@ import (
 	"testing"
 
 	"github.com/divtxt/lockd/statemachine"
+	"github.com/divtxt/lockd/util"
 	"github.com/divtxt/raft/testhelpers"
 )
 
-type f_name_expect_bool func(string, bool)
+const sampleAllValidChars = "$-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
+const sampleNihongo = "日本語"
+const sampleInvalidUtf8 = "\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"
 
 func TestInMemoryLSM(t *testing.T) {
 
 	var lsm statemachine.LockStateMachine = statemachine.NewInMemoryLSM()
 
+	type f_name_expect_bool func(string, bool)
 	fExpectResult := func(f func(name string) bool) f_name_expect_bool {
 		return func(name string, expected bool) {
 			actual := f(name)
@@ -42,11 +46,11 @@ func TestInMemoryLSM(t *testing.T) {
 	lsm_Unlock("bar", false)
 
 	// all printable ascii
-	lsm_IsLocked(sampleAllPrintableAscii, false)
-	lsm_Lock(sampleAllPrintableAscii, true)
-	lsm_IsLocked(sampleAllPrintableAscii, true)
-	lsm_Unlock(sampleAllPrintableAscii, true)
-	lsm_IsLocked(sampleAllPrintableAscii, false)
+	lsm_IsLocked(util.NameValidChars, false)
+	lsm_Lock(util.NameValidChars, true)
+	lsm_IsLocked(util.NameValidChars, true)
+	lsm_Unlock(util.NameValidChars, true)
+	lsm_IsLocked(util.NameValidChars, false)
 
 	// bad names should panic
 	testhelpers.TestHelper_ExpectPanic(
