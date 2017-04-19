@@ -38,29 +38,35 @@ func LockNamesTest() {
 	// invalid chars
 	assertError(
 		lc.Lock,
-		"A++",
+		"A+B",
 		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 43 at offset 1\"}\n",
 	)
 
-	// assert(lc.Lock, "", true)
-	// assert(lc.IsLocked, "foo", true)
+	// ascii control character
+	assertError(
+		lc.Lock,
+		"hi\n",
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 10 at offset 2\"}\n",
+	)
 
-	// // Dup lock should fail
-	// assert(lc.Lock, "foo", false)
-	// assert(lc.IsLocked, "foo", true)
+	// non-ascii unicode
+	assertError(
+		lc.Lock,
+		sampleNihongo,
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 230 at offset 0\"}\n",
+	)
 
-	// // Lock another entry should work
-	// assert(lc.Lock, "bar", true)
-	// assert(lc.IsLocked, "bar", true)
+	// non-ascii invalid utf8
+	assertError(
+		lc.Lock,
+		sampleInvalidUtf8,
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 189 at offset 0\"}\n",
+	)
 
-	// // Unlock entries
-	// assert(lc.Unlock, "bar", true)
-	// assert(lc.Unlock, "foo", true)
-	// assert(lc.IsLocked, "foo", false)
-	// assert(lc.IsLocked, "bar", false)
-
-	// // Dup unlock should fail
-	// assert(lc.Unlock, "bar", false)
-	// assert(lc.IsLocked, "bar", false)
-
+	// exceeding max length
+	assertError(
+		lc.Lock,
+		longestName+"a",
+		"Bad Request: {\"error\":\"Name is too long (129 bytes \\u003e max of 128)\"}\n",
+	)
 }
