@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	net_url "net/url"
+	"net/url"
 )
 
 type LockdClient struct {
@@ -32,10 +32,10 @@ func (lc *LockdClient) Unlock(name string) (bool, error) {
 }
 
 func (lc *LockdClient) lockish(method string, name string, falseCode int) (bool, error) {
-	escapedName := net_url.PathEscape(name)
-	url := fmt.Sprintf("http://%s:%d/lock/%s", lc.host, lc.port, escapedName)
+	escapedName := url.PathEscape(name)
+	lockUrl := fmt.Sprintf("http://%s:%d/lock/%s", lc.host, lc.port, escapedName)
 	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest(method, lockUrl, nil)
 	if err != nil {
 		return false, err
 	}
