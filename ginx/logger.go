@@ -1,9 +1,10 @@
 package ginx
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Gin logging middleware that logs to the standard lib log package
@@ -28,7 +29,7 @@ func StdLogLogger() gin.HandlerFunc {
 		comment := c.Errors.ByType(gin.ErrorTypePrivate).String()
 
 		log.Printf(
-			"[GIN] | %3d | %13v | %s | %-7s %s\n%s",
+			"[http] | %3d | %13v | %s | %-7s %q\n%s",
 			statusCode,
 			latency,
 			clientIP,
