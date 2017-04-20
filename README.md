@@ -124,9 +124,10 @@ Lock Admin:
 
 Multi-Node Locking:
 
+- [x] raft consensus module
+- [ ] raft snapshotting
 - [ ] cluster config file & config file loading
 - [ ] command line param: cluster config file name
-- [ ] raft consensus module
 - [ ] raft rpc endpoints
 - [ ] peer rpc service
 - [ ] proxy Lock & Unlock API calls to raft leader
@@ -134,7 +135,7 @@ Multi-Node Locking:
 Clients:
 
 - [ ] Ruby client
-- [ ] Python client
+- [x] Python client
 - [ ] Java/Scala client
 
 Servers:
