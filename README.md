@@ -12,7 +12,7 @@ Run using:
 
 ```
 go get -t ./...
-go run main.go
+go run main.go -cluster ./util/cluster_test.json
 ```
 
 
@@ -125,9 +125,8 @@ Lock Admin:
 Multi-Node Locking:
 
 - [x] raft consensus module
+- [ ] cluster support
 - [ ] raft snapshotting
-- [ ] cluster config file & config file loading
-- [ ] command line param: cluster config file name
 - [ ] raft rpc endpoints
 - [ ] peer rpc service
 - [ ] proxy Lock & Unlock API calls to raft leader
