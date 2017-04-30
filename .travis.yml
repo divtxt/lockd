@@ -14,8 +14,9 @@ install:
 script:
   - go test ./...
   - errcheck ./...
+  - go build
   - |
-    go run main.go -cluster ./util/cluster_test.json -id 42 &
+    ./lockd -cluster ./util/cluster_test.json -id 42 &
     sleep 2
   - go run integtests/main.go
   - python pyclient/integtest.py
