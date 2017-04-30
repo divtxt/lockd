@@ -25,6 +25,11 @@ func main() {
 			"    \t    server ids should be positive integers, but as strings since json keys must be strings\n"+
 			"    \t    example: {\"1\": \"lockd1:2080\", \"2\": \"lockd2:2080\", \"3\": \"lockd3:2080\"}",
 	)
+	thisServerIdPtr := flag.Uint64(
+		"id",
+		0,
+		"server id of this server - this id should be in the cluster definition",
+	)
 	flag.Parse()
 
 	// Check required args
@@ -33,7 +38,11 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
-
+	if *thisServerIdPtr == 0 {
+		fmt.Fprintln(os.Stderr, "Error: flag -id is required")
+		flag.Usage()
+		os.Exit(2)
+	}
 	// Reset standard log flags (undo Gin's settings)
 	log.SetFlags(log.LstdFlags)
 
@@ -48,6 +57,7 @@ func main() {
 		os.Exit(2)
 	}
 	log.Println("cluster:", cd)
+	log.Println("thisServerId:", *thisServerIdPtr)
 
 	// Instantiate a lock service
 	var l httpimpl.LockApi
