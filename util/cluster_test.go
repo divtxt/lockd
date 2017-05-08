@@ -22,7 +22,7 @@ func TestClusterDefinition(t *testing.T) {
 		t.Error(asids)
 	}
 
-	if cd.GetHostPort(102) != "10.0.0.22:2080" {
+	if cd.GetHostPort(102) != "10.0.0.22:2081" {
 		t.Error()
 	}
 }

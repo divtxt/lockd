@@ -15,7 +15,7 @@ type LockdClient struct {
 func NewLockdClient() *LockdClient {
 	return &LockdClient{
 		"127.0.0.1",
-		2080,
+		2081,
 	}
 }
 
