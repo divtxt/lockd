@@ -11,6 +11,7 @@ import (
 	"github.com/divtxt/lockd/httpimpl"
 	"github.com/divtxt/lockd/lockimpl"
 	"github.com/divtxt/lockd/util"
+	"github.com/divtxt/raft"
 	"github.com/gin-gonic/gin"
 )
 
@@ -61,7 +62,7 @@ func main() {
 
 	// Instantiate a lock service
 	var l httpimpl.LockApi
-	l, err = lockimpl.NewLockApiImpl()
+	l, err = lockimpl.NewLockApiImpl(cd.GetAllServerIds(), raft.ServerId(*thisServerIdPtr))
 	if err != nil {
 		panic(err)
 	}

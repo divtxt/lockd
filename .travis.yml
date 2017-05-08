@@ -16,7 +16,7 @@ script:
   - errcheck ./...
   - go build
   - |
-    ./lockd -cluster ./util/cluster_test.json -id 42 &
+    ./lockd -cluster integtests/config/1node.json -id 1 &
     sleep 2
   - go run integtests/main.go
   - python pyclient/integtest.py

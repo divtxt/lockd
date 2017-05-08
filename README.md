@@ -12,7 +12,7 @@ Run using:
 
 ```
 go get -t ./...
-go run main.go -cluster ./util/cluster_test.json -id 42
+go run main.go -cluster integtests/config/1node.json -id 1
 ```
 
 

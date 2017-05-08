@@ -19,7 +19,10 @@ const (
 )
 
 // Implementation of locking.LockApi
-func NewLockApiImpl() (*raftlock.RaftLock, error) {
+func NewLockApiImpl(
+	allServerIds []raft.ServerId,
+	thisServerId raft.ServerId,
+) (*raftlock.RaftLock, error) {
 
 	// --  Prepare raft ConsensusModule parameters
 
@@ -29,7 +32,7 @@ func NewLockApiImpl() (*raftlock.RaftLock, error) {
 
 	timeSettings := raft_config.TimeSettings{TickerDuration, ElectionTimeoutLow}
 
-	clusterInfo, err := raft_config.NewClusterInfo([]raft.ServerId{1}, 1)
+	clusterInfo, err := raft_config.NewClusterInfo(allServerIds, thisServerId)
 	if err != nil {
 		return nil, err
 	}
