@@ -2,6 +2,7 @@ package raftlock
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/divtxt/lockd/statemachine"
 	"github.com/divtxt/raft"
@@ -9,6 +10,8 @@ import (
 
 // Raft-commit driven lock.
 type RaftLock struct {
+	mutex *sync.Mutex
+
 	// Raft things
 	raftICMACO raft.IConsensusModule_AppendCommandOnly
 	raftLog    raft.LogReadOnly
@@ -34,6 +37,7 @@ func NewRaftLock(
 
 	// TODO: copy initial state
 	rl := &RaftLock{
+		&sync.Mutex{},
 		nil, // raftICMACO
 		raftLog,
 		statemachine.NewInMemoryLSM(),
@@ -65,7 +69,8 @@ func (rl *RaftLock) SetICMACO(raftICMACO raft.IConsensusModule_AppendCommandOnly
 // This returns a pair of booleans indicating the committed and uncommitted states of the entry.
 //
 func (rl *RaftLock) IsLocked(name string) (bool, bool) {
-	// FIXME: mutex
+	rl.mutex.Lock()
+	defer rl.mutex.Unlock()
 
 	// check uncommitted state - if already locked return nil
 	committedState := rl.committedLocks.IsLocked(name)
@@ -90,7 +95,8 @@ func (rl *RaftLock) IsLocked(name string) (bool, bool) {
 // Or: an entry cannot be locked twice even if the first lock action has not yet committed.
 //
 func (rl *RaftLock) Lock(name string) <-chan struct{} {
-	// FIXME: mutex
+	rl.mutex.Lock()
+	defer rl.mutex.Unlock()
 
 	// check uncommitted state - if already locked return nil
 	alreadyLocked := rl.uncommittedLocks.IsLocked(name)
@@ -133,7 +139,8 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 // Or: an entry cannot be unlocked twice even if the first unlock action has not yet committed.
 //
 func (rl *RaftLock) Unlock(name string) <-chan struct{} {
-	// FIXME: mutex
+	rl.mutex.Lock()
+	defer rl.mutex.Unlock()
 
 	// check uncommitted state - if not locked return nil
 	alreadyLocked := rl.uncommittedLocks.IsLocked(name)
@@ -169,7 +176,8 @@ func (rl *RaftLock) GetLastApplied() raft.LogIndex {
 
 // ApplyCommand should apply the given command to the state machine.
 func (rl *RaftLock) ApplyCommand(logIndex raft.LogIndex, command raft.Command) {
-	// FIXME: mutex
+	rl.mutex.Lock()
+	defer rl.mutex.Unlock()
 
 	// Check lastApplied is not going backward
 	if rl.lastApplied > logIndex {
@@ -226,10 +234,9 @@ func (rl *RaftLock) makeReplyChan(logIndex raft.LogIndex) <-chan struct{} {
 
 //
 func (rl *RaftLock) sendReply(logIndex raft.LogIndex) {
-	replyChan, hasKey := rl.replyChans[logIndex]
-	if !hasKey {
-		panic(fmt.Sprintf("FATAL: no replyChan for logIndex=%v", logIndex))
+	replyChan := rl.replyChans[logIndex]
+	if replyChan != nil {
+		delete(rl.replyChans, logIndex)
+		replyChan <- struct{}{}
 	}
-	delete(rl.replyChans, logIndex)
-	replyChan <- struct{}{}
 }
