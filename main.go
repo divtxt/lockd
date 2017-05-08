@@ -62,7 +62,7 @@ func main() {
 
 	// Instantiate a lock service
 	var l httpimpl.LockApi
-	l, err = lockimpl.NewLockApiImpl(cd.GetAllServerIds(), raft.ServerId(*thisServerIdPtr))
+	l, err = lockimpl.NewLockApiImpl(cd, raft.ServerId(*thisServerIdPtr))
 	if err != nil {
 		panic(err)
 	}

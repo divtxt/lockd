@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/divtxt/raft"
@@ -43,5 +44,9 @@ func (cd ClusterDefinition) GetAllServerIds() []raft.ServerId {
 }
 
 func (cd ClusterDefinition) GetHostPort(sid raft.ServerId) string {
-	return cd[sid]
+	hostPort, ok := cd[sid]
+	if !ok {
+		panic(fmt.Sprintf("unknown server id: %v", sid))
+	}
+	return hostPort
 }
