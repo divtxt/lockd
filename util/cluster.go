@@ -13,11 +13,11 @@ type ClusterDefinition map[raft.ServerId]string
 // LoadClusterDefinition loads the cluster definition from given json file.
 //
 // The json should be of the form: {<server id>: "host:port", ...}
-// Example: {1: "lockd1:2080", 2: "lockd2:2080", 3: "lockd3:2080"}
+// Example: {1: "lockd1:2081", 2: "lockd2:2082", 3: "lockd3:2083"}
 //
 // The json should be of the form: {"server-id": "host:port", ...}
 // server ids should be positive integers, but as strings since json keys must be strings
-// example: {\"1\": \"lockd1:2080\", \"2\": \"lockd2:2080\", \"3\": \"lockd3:2080\"}
+// example: {\"1\": \"lockd1:2081\", \"2\": \"lockd2:2082\", \"3\": \"lockd3:2083\"}
 func LoadClusterDefinition(name string) (ClusterDefinition, error) {
 	raw, err := ioutil.ReadFile(name)
 	if err != nil {

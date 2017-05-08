@@ -5,7 +5,7 @@ import json
 
 class LockdClient(object):
 
-    def __init__(self, host="127.0.0.1", port=2080):
+    def __init__(self, host="127.0.0.1", port=2081):
         self._host_port = "%s:%s" % (host, port)
 
     def is_locked(self, name):

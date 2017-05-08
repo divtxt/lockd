@@ -32,7 +32,7 @@ This will return one of the following status codes:
 Example:
 
 ```
-curl -i http://localhost:2080/lock/foo
+curl -i http://localhost:2081/lock/foo
 ```
 
 
@@ -48,7 +48,7 @@ This will return one of the following status codes:
 Example:
 
 ```
-curl -i -X POST http://localhost:2080/lock/foo
+curl -i -X POST http://localhost:2081/lock/foo
 ```
 
 
@@ -64,7 +64,7 @@ This will return one of the following status codes:
 Example:
 
 ```
-curl -i -X DELETE http://localhost:2080/lock/foo
+curl -i -X DELETE http://localhost:2081/lock/foo
 ```
 
 

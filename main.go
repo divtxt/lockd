@@ -17,14 +17,14 @@ import (
 
 func main() {
 	// Parse command line args
-	listenAddrPtr := flag.String("listen", ":2080", "listen address")
+	listenAddrPtr := flag.String("listen", ":2081", "listen address")
 	clusterPtr := flag.String(
 		"cluster",
 		"",
 		"cluster definition file - json file that describes the lockd cluster\n"+
 			"    \t    the json should be of the form: {\"server-id\": \"host:port\", ...}\n"+
 			"    \t    server ids should be positive integers, but as strings since json keys must be strings\n"+
-			"    \t    example: {\"1\": \"lockd1:2080\", \"2\": \"lockd2:2080\", \"3\": \"lockd3:2080\"}",
+			"    \t    example: {\"1\": \"lockd1:2081\", \"2\": \"lockd2:2082\", \"3\": \"lockd3:2083\"}",
 	)
 	thisServerIdPtr := flag.Uint64(
 		"id",
