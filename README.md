@@ -15,6 +15,31 @@ go get -t ./...
 go run main.go -cluster integtests/config/1node.json -id 1
 ```
 
+In another terminal, run the following:
+
+```
+go run integtests/main.go
+```
+
+### Multi Node Cluster
+
+To run multiple nodes, run the following in separate terminals:
+
+```
+# 1st terminal
+go build
+./lockd -cluster integtests/config/3nodes.json -id 101
+
+# 2nd terminal
+./lockd -cluster integtests/config/3nodes.json -id 102
+
+# 3rd terminal
+./lockd -cluster integtests/config/3nodes.json -id 103
+
+# 4th terminal
+go run integtests/main.go
+```
+
 
 ## Lock API
 
