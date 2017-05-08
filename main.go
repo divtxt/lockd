@@ -62,7 +62,8 @@ func main() {
 
 	// Instantiate a lock service
 	var l httpimpl.LockApi
-	l, err = lockimpl.NewLockApiImpl(cd, raft.ServerId(*thisServerIdPtr))
+	var rcm raft.IConsensusModule
+	l, rcm, err = lockimpl.NewLockApiImpl(cd, raft.ServerId(*thisServerIdPtr))
 	if err != nil {
 		panic(err)
 	}
@@ -72,6 +73,7 @@ func main() {
 	r.Use(ginx.StdLogLogger())
 	r.Use(ginx.StdLogRepanic())
 
+	httpimpl.AddRaftRpcEndpoints(r, rcm)
 	httpimpl.AddLockApiEndpoints(r, l)
 
 	// Run forever / till stopped
