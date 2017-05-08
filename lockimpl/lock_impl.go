@@ -23,7 +23,7 @@ const (
 func NewLockApiImpl(
 	cd util.ClusterDefinition,
 	thisServerId raft.ServerId,
-) (*raftlock.RaftLock, error) {
+) (*raftlock.RaftLock, raft.IConsensusModule, error) {
 
 	// --  Prepare raft ConsensusModule parameters
 
@@ -35,7 +35,7 @@ func NewLockApiImpl(
 
 	clusterInfo, err := raft_config.NewClusterInfo(cd.GetAllServerIds(), thisServerId)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	rpcService := NewJsonRaftRpcService(cd, thisServerId)
@@ -59,11 +59,11 @@ func NewLockApiImpl(
 		timeSettings,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Give RaftLock the IConsensusModule_AppendCommandOnly reference.
 	raftLock.SetICMACO(raftCm)
 
-	return raftLock, nil
+	return raftLock, raftCm, nil
 }
