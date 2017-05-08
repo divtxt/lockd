@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/divtxt/lockd/raftlock"
+	"github.com/divtxt/lockd/util"
 	"github.com/divtxt/raft"
 	raft_config "github.com/divtxt/raft/config"
 	raft_impl "github.com/divtxt/raft/impl"
@@ -20,7 +21,7 @@ const (
 
 // Implementation of locking.LockApi
 func NewLockApiImpl(
-	allServerIds []raft.ServerId,
+	cd util.ClusterDefinition,
 	thisServerId raft.ServerId,
 ) (*raftlock.RaftLock, error) {
 
@@ -32,10 +33,12 @@ func NewLockApiImpl(
 
 	timeSettings := raft_config.TimeSettings{TickerDuration, ElectionTimeoutLow}
 
-	clusterInfo, err := raft_config.NewClusterInfo(allServerIds, thisServerId)
+	clusterInfo, err := raft_config.NewClusterInfo(cd.GetAllServerIds(), thisServerId)
 	if err != nil {
 		return nil, err
 	}
+
+	rpcService := NewJsonRaftRpcService(cd, thisServerId)
 
 	// -- Make the LockApi
 
@@ -50,7 +53,7 @@ func NewLockApiImpl(
 		raftPersistentState,
 		raftLog,
 		raftLock,
-		nil, // should not actually need RpcService for single-node
+		rpcService,
 		clusterInfo,
 		MaxEntriesPerAppendEntry,
 		timeSettings,

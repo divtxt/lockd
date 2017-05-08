@@ -21,20 +21,19 @@ In another terminal, run the following:
 go run integtests/main.go
 ```
 
-### Multi Node Cluster
+### Multi-Node Cluster
 
-To run multiple nodes, run the following in separate terminals:
+To run a multi-node cluster in development, run the following in separate terminals:
 
 ```
 # 1st terminal
-go build
-./lockd -cluster integtests/config/3nodes.json -id 101
+go build && ./lockd -cluster integtests/config/3nodes.json -id 101
 
 # 2nd terminal
-./lockd -cluster integtests/config/3nodes.json -id 102
+./lockd -cluster integtests/config/3nodes.json -id 102 -listen :2082
 
 # 3rd terminal
-./lockd -cluster integtests/config/3nodes.json -id 103
+./lockd -cluster integtests/config/3nodes.json -id 103 -listen :2083
 
 # 4th terminal
 go run integtests/main.go
