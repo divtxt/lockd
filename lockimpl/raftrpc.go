@@ -27,7 +27,7 @@ func (jrrs *JsonRaftRpcService) RpcAppendEntries(
 	var reply raft.RpcAppendEntriesReply
 	err := util.JsonPost(url, rpc, &reply)
 	if err != nil {
-		log.Printf("rpc: RpcAppendEntries(%v, %v) -> error: %v\n", toServer, rpc, err)
+		log.Printf("rpc to %v -> error: %v\n", toServer, err)
 		return nil
 	}
 	return &reply
@@ -42,7 +42,7 @@ func (jrrs *JsonRaftRpcService) RpcRequestVote(
 	var reply raft.RpcRequestVoteReply
 	err := util.JsonPost(url, rpc, &reply)
 	if err != nil {
-		log.Printf("rpc: RpcAppendEntries(%v, %v) -> error: %v\n", toServer, rpc, err)
+		log.Printf("rpc to %v -> error: %v\n", toServer, err)
 		return nil
 	}
 	return &reply
