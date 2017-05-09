@@ -36,12 +36,16 @@ func makeLockHandler(lockApi LockApi) func(c *gin.Context) {
 		if e := util.IsValidLockName(name); e != "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": e})
 		} else {
-			commitChan := lockApi.Lock(name)
-			if commitChan != nil {
-				<-commitChan // FIXME: add timeout!
-				c.JSON(http.StatusOK, gin.H{})
+			commitChan, err := lockApi.Lock(name)
+			if err != nil {
+				c.JSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
 			} else {
-				c.JSON(http.StatusConflict, gin.H{"error": "Conflict"})
+				if commitChan != nil {
+					<-commitChan // FIXME: add timeout!
+					c.JSON(http.StatusOK, gin.H{})
+				} else {
+					c.JSON(http.StatusConflict, gin.H{"error": "Conflict"})
+				}
 			}
 		}
 	}
@@ -53,12 +57,16 @@ func makeUnlockHandler(lockApi LockApi) func(c *gin.Context) {
 		if e := util.IsValidLockName(name); e != "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": e})
 		} else {
-			commitChan := lockApi.Unlock(name)
-			if commitChan != nil {
-				<-commitChan // FIXME: add timeout!
-				c.JSON(http.StatusOK, gin.H{})
+			commitChan, err := lockApi.Unlock(name)
+			if err != nil {
+				c.JSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
 			} else {
-				c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
+				if commitChan != nil {
+					<-commitChan // FIXME: add timeout!
+					c.JSON(http.StatusOK, gin.H{})
+				} else {
+					c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
+				}
 			}
 		}
 	}

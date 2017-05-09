@@ -94,14 +94,14 @@ func (rl *RaftLock) IsLocked(name string) (bool, bool) {
 // For example: a locked entry can be unlocked even if the lock action has not yet committed.
 // Or: an entry cannot be locked twice even if the first lock action has not yet committed.
 //
-func (rl *RaftLock) Lock(name string) <-chan struct{} {
+func (rl *RaftLock) Lock(name string) (<-chan struct{}, error) {
 	rl.mutex.Lock()
 	defer rl.mutex.Unlock()
 
 	// check uncommitted state - if already locked return nil
 	alreadyLocked := rl.uncommittedLocks.IsLocked(name)
 	if alreadyLocked {
-		return nil
+		return nil, nil
 	}
 
 	// append command to raft log
@@ -111,7 +111,7 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 	}
 	logIndex, err := rl.raftICMACO.AppendCommand(command)
 	if err != nil {
-		panic(err) // FIXME: non-panic error handling
+		return nil, err
 	}
 
 	// apply lock action to uncommitted
@@ -120,7 +120,7 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 		panic(fmt.Sprintf("FATAL: uncommittedLocks.Lock() unexpectedly already locked: %v", name))
 	}
 
-	return rl.makeReplyChan(logIndex)
+	return rl.makeReplyChan(logIndex), nil
 }
 
 // Unlock the given entry.
@@ -138,14 +138,14 @@ func (rl *RaftLock) Lock(name string) <-chan struct{} {
 // For example: an unlocked entry can be locked even if the unlock action has not yet committed.
 // Or: an entry cannot be unlocked twice even if the first unlock action has not yet committed.
 //
-func (rl *RaftLock) Unlock(name string) <-chan struct{} {
+func (rl *RaftLock) Unlock(name string) (<-chan struct{}, error) {
 	rl.mutex.Lock()
 	defer rl.mutex.Unlock()
 
 	// check uncommitted state - if not locked return nil
 	alreadyLocked := rl.uncommittedLocks.IsLocked(name)
 	if !alreadyLocked {
-		return nil
+		return nil, nil
 	}
 
 	// append command to raft log
@@ -155,7 +155,7 @@ func (rl *RaftLock) Unlock(name string) <-chan struct{} {
 	}
 	logIndex, err := rl.raftICMACO.AppendCommand(command)
 	if err != nil {
-		panic(err) // FIXME: non-panic error handling
+		return nil, err
 	}
 
 	// apply unlock action to uncommitted
@@ -164,7 +164,7 @@ func (rl *RaftLock) Unlock(name string) <-chan struct{} {
 		panic(fmt.Sprintf("FATAL: uncommittedLocks.Unlock() unexpectedly not locked: %v", name))
 	}
 
-	return rl.makeReplyChan(logIndex)
+	return rl.makeReplyChan(logIndex), nil
 }
 
 // ---- Implement raft.StateMachine interface
