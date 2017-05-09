@@ -18,7 +18,7 @@ go run main.go -cluster integtests/config/1node.json -id 1
 In another terminal, run the following:
 
 ```
-go run integtests/main.go
+curl -i -X POST http://localhost:2081/lock/foo
 ```
 
 ### Multi-Node Cluster
@@ -52,6 +52,7 @@ This will return one of the following status codes:
 
 - `200 OK` - Entry is locked.
 - `404 Not Found` - Entry is unlocked.
+- `503 Service Unavailable` - Node is not the leader of the cluster.
 
 Example:
 
@@ -68,6 +69,7 @@ This will return one of the following status codes:
 
 - `200 OK` - Success - entry is now locked.
 - `409 Conflict` - Failed - entry is locked.
+- `503 Service Unavailable` - Node is not the leader of the cluster.
 
 Example:
 
@@ -84,6 +86,7 @@ This will return one of the following status codes:
 
 - `200 OK` - Success - entry is now locked.
 - `409 Conflict` - Failed - entry is locked.
+- `503 Service Unavailable` - Node is not the leader of the cluster.
 
 Example:
 
