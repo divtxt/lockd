@@ -58,37 +58,55 @@ func TestRaftLock(t *testing.T) {
 	checkLockState("bar", true, true)
 
 	// unlock "foo" should return nil to indicate unlock failure
-	if rl.Unlock("foo") != nil {
+	unlockFooCommitChan1, err := rl.Unlock("foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unlockFooCommitChan1 != nil {
 		t.Fatal()
 	}
 	checkLockState("foo", false, false)
 
 	// Lock "foo"
-	lockFooCommitChan := rl.Lock("foo")
-	if lockFooCommitChan == nil {
+	lockFooCommitChan2, err := rl.Lock("foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lockFooCommitChan2 == nil {
 		t.Fatal()
 	}
-	chanWillBlock(t, lockFooCommitChan)
+	chanWillBlock(t, lockFooCommitChan2)
 	checkLockState("foo", false, true)
 
 	// a second lock "foo" should return nil to indicate lock failure
-	if rl.Lock("foo") != nil {
+	lockFooCommitChan3, err := rl.Lock("foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lockFooCommitChan3 != nil {
 		t.Fatal()
 	}
 	checkLockState("foo", false, true)
 
 	// lock "bar" should return nil to indicate lock failure
-	if rl.Lock("bar") != nil {
+	lockBarCommitChan4, err := rl.Lock("foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lockBarCommitChan4 != nil {
 		t.Fatal()
 	}
 	checkLockState("bar", true, true)
 
 	// Unlock "bar"
-	unlockBarCommitChan := rl.Unlock("bar")
-	if unlockBarCommitChan == nil {
+	unlockBarCommitChan5, err := rl.Unlock("bar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unlockBarCommitChan5 == nil {
 		t.Fatal()
 	}
-	chanWillBlock(t, unlockBarCommitChan)
+	chanWillBlock(t, unlockBarCommitChan5)
 	checkLockState("bar", true, false)
 
 	// Advance commitIndex by 1 log entry
@@ -101,16 +119,19 @@ func TestRaftLock(t *testing.T) {
 	}
 	checkLockState("foo", true, true)
 	checkLockState("bar", true, false) // FAIL
-	chanHasValue(t, lockFooCommitChan)
-	chanWillBlock(t, unlockBarCommitChan)
+	chanHasValue(t, lockFooCommitChan2)
+	chanWillBlock(t, unlockBarCommitChan5)
 
 	// Relock "bar"
-	relockBarCommitChan := rl.Lock("bar")
-	if relockBarCommitChan == nil {
+	relockBarCommitChan6, err := rl.Lock("bar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if relockBarCommitChan6 == nil {
 		t.Fatal()
 	}
 	checkLockState("bar", true, true)
-	chanWillBlock(t, relockBarCommitChan)
+	chanWillBlock(t, relockBarCommitChan6)
 
 	// Advance commitIndex by 2 log entries
 	committer.CommitIndexChanged(104)
@@ -119,8 +140,8 @@ func TestRaftLock(t *testing.T) {
 	}
 	checkLockState("foo", true, true)
 	checkLockState("bar", true, true)
-	chanHasValue(t, unlockBarCommitChan)
-	chanHasValue(t, relockBarCommitChan)
+	chanHasValue(t, unlockBarCommitChan5)
+	chanHasValue(t, relockBarCommitChan6)
 }
 
 func chanWillBlock(t *testing.T, c <-chan struct{}) {
