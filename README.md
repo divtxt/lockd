@@ -30,10 +30,10 @@ To run a multi-node cluster in development, run the following in separate termin
 go build && ./lockd -cluster integtests/config/3nodes.json -id 101
 
 # 2nd terminal
-./lockd -cluster integtests/config/3nodes.json -id 102 -listen :2082
+./lockd -cluster integtests/config/3nodes.json -id 102
 
 # 3rd terminal
-./lockd -cluster integtests/config/3nodes.json -id 103 -listen :2083
+./lockd -cluster integtests/config/3nodes.json -id 103
 
 # 4th terminal
 go run integtests/main.go
@@ -153,7 +153,7 @@ Multi-Node Locking:
 
 - [x] raft consensus module
 - [x] cluster support
-- [ ] default port using cluster info
+- [x] listen port using cluster info
 - [x] raft rpc endpoints
 - [x] peer rpc service
 - [ ] proxy Lock & Unlock API calls to raft leader

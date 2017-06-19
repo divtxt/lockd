@@ -46,6 +46,7 @@ func (cd ClusterDefinition) GetAllServerIds() []raft.ServerId {
 func (cd ClusterDefinition) GetHostPort(sid raft.ServerId) string {
 	hostPort, ok := cd[sid]
 	if !ok {
+		// FIXME: change to error
 		panic(fmt.Sprintf("unknown server id: %v", sid))
 	}
 	return hostPort
