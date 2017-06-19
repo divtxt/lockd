@@ -152,11 +152,12 @@ Lock Admin:
 Multi-Node Locking:
 
 - [x] raft consensus module
-- [ ] cluster support
-- [ ] raft snapshotting
-- [ ] raft rpc endpoints
-- [ ] peer rpc service
+- [x] cluster support
+- [ ] default port using cluster info
+- [x] raft rpc endpoints
+- [x] peer rpc service
 - [ ] proxy Lock & Unlock API calls to raft leader
+- [ ] raft snapshotting
 
 Clients:
 
