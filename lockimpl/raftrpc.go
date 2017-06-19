@@ -23,7 +23,7 @@ func (jrrs *JsonRaftRpcService) RpcAppendEntries(
 	rpc *raft.RpcAppendEntries,
 ) *raft.RpcAppendEntriesReply {
 	hostPort := jrrs.cd.GetHostPort(toServer)
-	url := fmt.Sprintf("http://%s/raft/AppendEntries", hostPort)
+	url := fmt.Sprintf("http://%s/raft/AppendEntries?from=%d", hostPort, uint64(jrrs.thisServerId))
 	var reply raft.RpcAppendEntriesReply
 	err := util.JsonPost(url, rpc, &reply)
 	if err != nil {
@@ -38,7 +38,7 @@ func (jrrs *JsonRaftRpcService) RpcRequestVote(
 	rpc *raft.RpcRequestVote,
 ) *raft.RpcRequestVoteReply {
 	hostPort := jrrs.cd.GetHostPort(toServer)
-	url := fmt.Sprintf("http://%s/raft/RequestVote", hostPort)
+	url := fmt.Sprintf("http://%s/raft/RequestVote?from=%d", hostPort, uint64(jrrs.thisServerId))
 	var reply raft.RpcRequestVoteReply
 	err := util.JsonPost(url, rpc, &reply)
 	if err != nil {
