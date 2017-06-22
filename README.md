@@ -156,6 +156,10 @@ Multi-Node Locking:
 - [x] listen port using cluster info
 - [x] raft rpc endpoints
 - [x] peer rpc service
+- [ ] change default port back to 2080
+- [ ] default port when port not specified
+- [ ] easy single node option
+- [ ] clients support for cluster
 - [ ] proxy Lock & Unlock API calls to raft leader
 - [ ] raft snapshotting
 
