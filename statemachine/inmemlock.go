@@ -17,6 +17,14 @@ func NewInMemoryLSM() *InMemoryLSM {
 	return &InMemoryLSM{make(map[string]bool)}
 }
 
+func (iml *InMemoryLSM) Clone() *InMemoryLSM {
+	copy := &InMemoryLSM{make(map[string]bool)}
+	for k, v := range iml.locks {
+		copy.locks[k] = v
+	}
+	return copy
+}
+
 // --- Implement LockStateMachine
 
 func (iml *InMemoryLSM) IsLocked(name string) bool {

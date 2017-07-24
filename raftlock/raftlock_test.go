@@ -3,176 +3,226 @@ package raftlock_test
 import (
 	"testing"
 
+	"fmt"
+
 	"github.com/divtxt/lockd/raftlock"
 	"github.com/divtxt/raft"
-	raft_committer "github.com/divtxt/raft/committer"
-	raft_log "github.com/divtxt/raft/log"
 )
 
 func TestRaftLock(t *testing.T) {
-	// Real log for testing
-	var raftLog raft.Log = raft_log.NewInMemoryLog()
-	for logIndex := 1; logIndex <= 101; logIndex++ {
-		entry := raft.LogEntry{raft.TermNo(logIndex / 10), []byte{}}
-		_, err := raftLog.AppendEntry(entry)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	iole, err := raftLog.GetIndexOfLastEntry()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if iole != 101 {
-		t.Fatal(iole)
-	}
+	// mock log
+	ml := &mockROLog{}
+	ml.expectIoleCall(103)
+	ml.expectEaiCall(101, []raft.LogEntry{
+		raft.LogEntry{5, makeLockCmd("woof")}, // 102
+		raft.LogEntry{5, makeLockCmd("moo")},  // 103
+		// future entries:
+		// 104 = lock foo
+		// 105 = unlock bar
+		// 106 = unlock woof
+		// 107 = unlock moo
+		// (discard 106 & 107)
+		// 106 = relock bar
+		// 107 = unlock woof
+		// 108 = lock tweet
+	})
 
 	// Create RaftLock instance.
 	rl := raftlock.NewRaftLock(
-		raftLog,
+		ml,
 		[]string{"bar"},
-		101,
-	)
-
-	// Create (partial) ConsensusModule.
-	// Simplify testing by not using a full ConsensusModule but by using some parts.
-	micmaco := NewMockICMACO(raftLog, 11, rl)
-	// Use a real Committer in test mode to drive commits.
-	committer := raft_committer.NewCommitter(raftLog, rl)
-	committer.StopSync() // switch to manual control
-	committer.TestHelperGetCommitApplier().TestHelperFakeRestart()
-
-	// Give RaftLock the IConsensusModule_AppendCommandOnly reference.
-	rl.SetICMACO(micmaco)
+		101)
+	if rl.GetLastApplied() != 101 {
+		t.Fatal(rl.GetLastApplied())
+	}
+	if !ml.ioleCalled || !ml.eaiCalled {
+		t.Fatal(ml)
+	}
 
 	//
 	checkLockState := func(name string, ecs bool, eucs bool) {
 		cs, ucs := rl.IsLocked(name)
 		if cs != ecs || ucs != eucs {
-			t.Fatalf("IsLocked(\"%v\") = (%v, %v) but expected (%v, %v)", name, cs, ucs, ecs, eucs)
+			panic(fmt.Sprintf(
+				"IsLocked(\"%v\") = (%v, %v) but expected (%v, %v)", name, cs, ucs, ecs, eucs,
+			))
 		}
 	}
 
-	// check starting states
+	// check starting states, and verify newer entries from Log were applied
 	checkLockState("foo", false, false)
 	checkLockState("bar", true, true)
+	checkLockState("woof", false, true)
+	checkLockState("moo", false, true)
 
-	// unlock "foo" should return nil to indicate unlock failure
-	unlockFooCommitChan1, err := rl.Unlock("foo")
-	if err != nil {
+	// unlock "foo" should return ErrAlreadyUnlocked to indicate unlock failure
+	err := rl.CheckAndApplyCommand(0, makeUnlockCmd("foo"))
+	if err != raftlock.ErrAlreadyUnlocked {
 		t.Fatal(err)
-	}
-	if unlockFooCommitChan1 != nil {
-		t.Fatal()
 	}
 	checkLockState("foo", false, false)
 
-	// Lock "foo"
-	lockFooCommitChan2, err := rl.Lock("foo")
+	// -- 104 : Lock "foo"
+	err = rl.CheckAndApplyCommand(104, makeLockCmd("foo"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if lockFooCommitChan2 == nil {
-		t.Fatal()
-	}
-	chanWillBlock(t, lockFooCommitChan2)
 	checkLockState("foo", false, true)
 
-	// a second lock "foo" should return nil to indicate lock failure
-	lockFooCommitChan3, err := rl.Lock("foo")
-	if err != nil {
+	// a second lock "foo" should return ErrAlreadyLocked to indicate lock failure
+	err = rl.CheckAndApplyCommand(0, makeLockCmd("foo"))
+	if err != raftlock.ErrAlreadyLocked {
 		t.Fatal(err)
-	}
-	if lockFooCommitChan3 != nil {
-		t.Fatal()
 	}
 	checkLockState("foo", false, true)
 
 	// lock "bar" should return nil to indicate lock failure
-	lockBarCommitChan4, err := rl.Lock("foo")
-	if err != nil {
+	err = rl.CheckAndApplyCommand(0, makeLockCmd("bar"))
+	if err != raftlock.ErrAlreadyLocked {
 		t.Fatal(err)
-	}
-	if lockBarCommitChan4 != nil {
-		t.Fatal()
 	}
 	checkLockState("bar", true, true)
 
-	// Unlock "bar"
-	unlockBarCommitChan5, err := rl.Unlock("bar")
+	// -- 105 : Unlock "bar"
+	err = rl.CheckAndApplyCommand(105, makeUnlockCmd("bar"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if unlockBarCommitChan5 == nil {
-		t.Fatal()
-	}
-	chanWillBlock(t, unlockBarCommitChan5)
 	checkLockState("bar", true, false)
 
-	// Advance commitIndex by 1 log entry
-	if committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
-		t.Fatal()
-	}
-	committer.CommitIndexChanged(102)
-	if !committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
-		t.Fatal()
+	// -- Commit to 104 : Lock "foo"
+	ml.expectIoleCall(104)
+	ml.expectEaiCall(101, []raft.LogEntry{
+		raft.LogEntry{5, makeLockCmd("woof")}, // 102
+		raft.LogEntry{5, makeLockCmd("moo")},  // 103
+		raft.LogEntry{5, makeLockCmd("foo")},  // 104
+	})
+	rl.CommitIndexChanged(104)
+	if ml.ioleCalled || !ml.eaiCalled {
+		t.Fatal(ml)
 	}
 	checkLockState("foo", true, true)
-	checkLockState("bar", true, false) // FAIL
-	chanHasValue(t, lockFooCommitChan2)
-	chanWillBlock(t, unlockBarCommitChan5)
+	checkLockState("bar", true, false)
+	checkLockState("woof", true, true)
+	checkLockState("moo", true, true)
 
-	// Relock "bar"
-	relockBarCommitChan6, err := rl.Lock("bar")
+	// -- 106 & 107 : Unlock "woof" and "moo"
+	err = rl.CheckAndApplyCommand(106, makeUnlockCmd("woof"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if relockBarCommitChan6 == nil {
-		t.Fatal()
+	err = rl.CheckAndApplyCommand(107, makeUnlockCmd("moo"))
+	if err != nil {
+		t.Fatal(err)
 	}
-	checkLockState("bar", true, true)
-	chanWillBlock(t, relockBarCommitChan6)
+	checkLockState("foo", true, true)
+	checkLockState("bar", true, false)
+	checkLockState("woof", true, false)
+	checkLockState("moo", true, false)
 
-	// Advance commitIndex by 2 log entries
-	committer.CommitIndexChanged(104)
-	if !committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
-		t.Fatal()
+	// -- redo 106 & 107, add 108 : Discard & replay 3 log entries
+	ml.expectIoleCall(108)
+	ml.expectEaiCall(104, []raft.LogEntry{
+		raft.LogEntry{5, makeUnlockCmd("bar")},  // 105
+		raft.LogEntry{5, makeLockCmd("bar")},    // 106
+		raft.LogEntry{5, makeUnlockCmd("woof")}, // 107
+		raft.LogEntry{5, makeLockCmd("tweet")},  // 108
+	})
+	err = rl.SetEntriesAfterIndex(105, []raft.LogEntry{
+		raft.LogEntry{5, makeLockCmd("bar")},    // 106
+		raft.LogEntry{5, makeUnlockCmd("woof")}, // 107
+		raft.LogEntry{5, makeLockCmd("tweet")},  // 108
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ml.ioleCalled || !ml.eaiCalled {
+		t.Fatal(ml)
 	}
 	checkLockState("foo", true, true)
 	checkLockState("bar", true, true)
-	chanHasValue(t, unlockBarCommitChan5)
-	chanHasValue(t, relockBarCommitChan6)
-}
+	checkLockState("woof", true, false)
+	checkLockState("moo", true, true)
+	checkLockState("tweet", false, true)
 
-func chanWillBlock(t *testing.T, c <-chan struct{}) {
-	select {
-	case <-c:
-		t.Fatal()
-	default:
+	// -- Commit to 105 : Unlock "bar"
+	ml.expectIoleCall(105)
+	ml.expectEaiCall(104, []raft.LogEntry{
+		raft.LogEntry{5, makeUnlockCmd("bar")}, // 105
+	})
+	rl.CommitIndexChanged(105)
+	if ml.ioleCalled || !ml.eaiCalled {
+		t.Fatal(ml)
 	}
+	checkLockState("foo", true, true)
+	checkLockState("bar", false, true)
+	checkLockState("woof", true, false)
+	checkLockState("moo", true, true)
+	checkLockState("tweet", false, true)
 }
 
-func chanHasValue(t *testing.T, c <-chan struct{}) {
-	select {
-	case <-c:
-	default:
-		t.Fatal()
+// -- mock LogReadOnly
+
+func makeLockCmd(n string) raft.Command {
+	cmd, err := raftlock.MakeLockCommand(n)
+	if err != nil {
+		panic(err)
 	}
+	return cmd
 }
 
-// ---- Mock IConsensusModule_AppendCommandOnly
-
-type MockICMACO struct {
-	rl     raft.Log
-	termNo raft.TermNo
-	sm     raft.StateMachine
+func makeUnlockCmd(n string) raft.Command {
+	cmd, err := raftlock.MakeUnlockCommand(n)
+	if err != nil {
+		panic(err)
+	}
+	return cmd
 }
 
-func NewMockICMACO(rl raft.Log, termNo raft.TermNo, sm raft.StateMachine) *MockICMACO {
-	return &MockICMACO{rl, termNo, sm}
+type mockROLog struct {
+	ioleCalled bool
+	iole       raft.LogIndex
+
+	// expectedTaiIndex raft.LogIndex
+	// tai              raft.TermNo
+
+	eaiCalled        bool
+	expectedEaiIndex raft.LogIndex
+	expectedEaiCount uint64
+	eai              []raft.LogEntry
 }
 
-func (micmaco *MockICMACO) AppendCommand(command raft.Command) (raft.LogIndex, error) {
-	entry := raft.LogEntry{micmaco.termNo, command}
-	return micmaco.rl.AppendEntry(entry)
+func (m *mockROLog) expectIoleCall(i raft.LogIndex) {
+	m.ioleCalled = false
+	m.iole = i
+}
+
+func (m *mockROLog) GetIndexOfLastEntry() (raft.LogIndex, error) {
+	m.ioleCalled = true
+	return m.iole, nil
+}
+
+func (m *mockROLog) GetTermAtIndex(i raft.LogIndex) (raft.TermNo, error) {
+	panic("Not implemented!")
+}
+
+func (m *mockROLog) expectEaiCall(i raft.LogIndex, e []raft.LogEntry) {
+	m.eaiCalled = false
+	m.expectedEaiIndex = i
+	m.expectedEaiCount = uint64(len(e))
+	m.eai = e
+}
+
+func (m *mockROLog) GetEntriesAfterIndex(i raft.LogIndex, c uint64) ([]raft.LogEntry, error) {
+	if m.eaiCalled {
+		panic("double call!")
+	}
+	if i != m.expectedEaiIndex {
+		panic(fmt.Sprintf("%v", i))
+	}
+	if c != m.expectedEaiCount {
+		panic(fmt.Sprintf("%v", c))
+	}
+	m.eaiCalled = true
+	return m.eai, nil
 }

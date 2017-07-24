@@ -2,6 +2,7 @@ package raftlock
 
 import (
 	"encoding/json"
+
 	"github.com/divtxt/raft"
 )
 
@@ -10,12 +11,12 @@ type lockAction struct {
 	Name string `json:"n"`
 }
 
-func lockActionSerialize(cmd *lockAction) (raft.Command, error) {
-	jsonBytes, err := json.Marshal(cmd)
-	if err != nil {
-		return nil, err
-	}
-	return jsonBytes, nil
+func MakeLockCommand(name string) (raft.Command, error) {
+	return json.Marshal(&lockAction{true, name})
+}
+
+func MakeUnlockCommand(name string) (raft.Command, error) {
+	return json.Marshal(&lockAction{false, name})
 }
 
 func lockActionDeserialize(command raft.Command) (*lockAction, error) {
