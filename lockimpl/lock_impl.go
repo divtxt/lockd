@@ -3,6 +3,7 @@ package lockimpl
 import (
 	"time"
 
+	"github.com/divtxt/lockd/backend"
 	"github.com/divtxt/lockd/raftlock"
 	"github.com/divtxt/lockd/util"
 	"github.com/divtxt/raft"
@@ -23,7 +24,7 @@ const (
 func NewLockApiImpl(
 	cd util.ClusterDefinition,
 	thisServerId raft.ServerId,
-) (*raftlock.RaftLock, raft.IConsensusModule, error) {
+) (raftlock.RaftLock, raft.IConsensusModule, error) {
 
 	// --  Prepare raft ConsensusModule parameters
 
@@ -40,19 +41,18 @@ func NewLockApiImpl(
 
 	rpcService := NewJsonRaftRpcService(cd, thisServerId)
 
-	// -- Make the LockApi
+	// -- Make the LockBackend
 
-	raftLock := raftlock.NewRaftLock(
-		raftLog,
-		[]string{}, // no initial locks
-		0,          // initialCommitIndex
-	)
+	var lockBackend backend.LockBackend = backend.NewInMemoryBackend(0)
 
-	// -- Create the raft ConsensusModule
+	// -- Make the RaftLock and raft ConsensusModule
+
+	stateMachine, partialRaftLock := raftlock.NewRaftLock(lockBackend)
+
 	raftCm, err := raft_impl.NewConsensusModule(
 		raftPersistentState,
 		raftLog,
-		raftLock,
+		stateMachine,
 		rpcService,
 		clusterInfo,
 		MaxEntriesPerAppendEntry,
@@ -62,8 +62,7 @@ func NewLockApiImpl(
 		return nil, nil, err
 	}
 
-	// Give RaftLock the IConsensusModule_AppendCommandOnly reference.
-	raftLock.SetICMACO(raftCm)
+	raftLock := partialRaftLock.Finish(raftCm)
 
 	return raftLock, raftCm, nil
 }
