@@ -2,12 +2,17 @@ package raftlock
 
 import (
 	"encoding/json"
+
 	"github.com/divtxt/raft"
 )
 
 type lockAction struct {
 	Lock bool   `json:"a"`
 	Name string `json:"n"`
+}
+
+type lockActionResult struct {
+	success bool
 }
 
 func lockActionSerialize(cmd *lockAction) (raft.Command, error) {

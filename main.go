@@ -7,6 +7,8 @@ import (
 	"net"
 	"os"
 
+	"github.com/divtxt/lockd/raftlock"
+
 	"fmt"
 
 	"github.com/divtxt/lockd/ginx"
@@ -48,9 +50,9 @@ func main() {
 	log.Println("calculated listenAddr:", listenAddr)
 
 	// Instantiate a lock service
-	var l httpimpl.LockApi
+	var rl raftlock.RaftLock
 	var rcm raft.IConsensusModule
-	l, rcm, err = lockimpl.NewLockApiImpl(cd, args.thisServerId)
+	rl, rcm, err = lockimpl.NewLockApiImpl(cd, args.thisServerId)
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +63,7 @@ func main() {
 	r.Use(ginx.StdLogRepanic())
 
 	httpimpl.AddRaftRpcEndpoints(r, rcm)
-	httpimpl.AddLockApiEndpoints(r, l)
+	httpimpl.AddLockApiEndpoints(r, rl)
 
 	// Run forever / till stopped
 	log.Println("Starting server on address:", listenAddr)

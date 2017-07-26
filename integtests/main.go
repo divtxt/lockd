@@ -1,10 +1,10 @@
 package main
 
 import (
-	. "github.com/divtxt/lockd/integtests/testcases"
+	"github.com/divtxt/lockd/integtests/testcases"
 )
 
 func main() {
-	SimpleIntegrationTest()
-	LockNamesTest()
+	testcases.SimpleIntegrationTest()
+	testcases.LockNamesTest()
 }

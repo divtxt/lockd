@@ -39,34 +39,34 @@ func LockNamesTest() {
 	assertError(
 		lc.Lock,
 		"A+B",
-		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 43 at offset 1\"}\n",
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 43 at offset 1\"}",
 	)
 
 	// ascii control character
 	assertError(
 		lc.Lock,
 		"hi\n",
-		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 10 at offset 2\"}\n",
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 10 at offset 2\"}",
 	)
 
 	// non-ascii unicode
 	assertError(
 		lc.Lock,
 		sampleNihongo,
-		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 230 at offset 0\"}\n",
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 230 at offset 0\"}",
 	)
 
 	// non-ascii invalid utf8
 	assertError(
 		lc.Lock,
 		sampleInvalidUtf8,
-		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 189 at offset 0\"}\n",
+		"Bad Request: {\"error\":\"Name contains non-printable/non-ascii byte 189 at offset 0\"}",
 	)
 
 	// exceeding max length
 	assertError(
 		lc.Lock,
 		longestName+"a",
-		"Bad Request: {\"error\":\"Name is too long (129 bytes \\u003e max of 128)\"}\n",
+		"Bad Request: {\"error\":\"Name is too long (129 bytes \\u003e max of 128)\"}",
 	)
 }
