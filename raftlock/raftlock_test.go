@@ -1,178 +1,119 @@
 package raftlock_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/divtxt/lockd/backend"
 	"github.com/divtxt/lockd/raftlock"
 	"github.com/divtxt/raft"
-	raft_committer "github.com/divtxt/raft/committer"
-	raft_log "github.com/divtxt/raft/log"
 )
 
 func TestRaftLock(t *testing.T) {
-	// Real log for testing
-	var raftLog raft.Log = raft_log.NewInMemoryLog()
-	for logIndex := 1; logIndex <= 101; logIndex++ {
-		entry := raft.LogEntry{raft.TermNo(logIndex / 10), []byte{}}
-		_, err := raftLog.AppendEntry(entry)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	iole, err := raftLog.GetIndexOfLastEntry()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if iole != 101 {
-		t.Fatal(iole)
-	}
+	imb := backend.NewInMemoryBackend(10)
+	sm, prl := raftlock.NewRaftLock(imb)
+	micmaco := newMockICMACO(sm)
+	rl := prl.Finish(micmaco)
 
-	// Create RaftLock instance.
-	rl := raftlock.NewRaftLock(
-		raftLog,
-		[]string{"bar"},
-		101,
-	)
-
-	// Create (partial) ConsensusModule.
-	// Simplify testing by not using a full ConsensusModule but by using some parts.
-	micmaco := NewMockICMACO(raftLog, 11, rl)
-	// Use a real Committer in test mode to drive commits.
-	committer := raft_committer.NewCommitter(raftLog, rl)
-	committer.StopSync() // switch to manual control
-	committer.TestHelperGetCommitApplier().TestHelperFakeRestart()
-
-	// Give RaftLock the IConsensusModule_AppendCommandOnly reference.
-	rl.SetICMACO(micmaco)
-
-	//
-	checkLockState := func(name string, ecs bool, eucs bool) {
-		cs, ucs := rl.IsLocked(name)
-		if cs != ecs || ucs != eucs {
-			t.Fatalf("IsLocked(\"%v\") = (%v, %v) but expected (%v, %v)", name, cs, ucs, ecs, eucs)
+	rl_IsLocked := func(name string, expected bool) {
+		if actual := rl.IsLocked(name); actual != expected {
+			panic(fmt.Sprintf("%v", actual))
 		}
 	}
 
-	// check starting states
-	checkLockState("foo", false, false)
-	checkLockState("bar", true, true)
+	rl_Lock := func(name string, expected bool, expectedErr error) {
+		success, err := rl.Lock(name)
+		if err != expectedErr {
+			panic(err)
+		}
+		if expectedErr == nil {
+			if success != expected {
+				panic(fmt.Sprintf("got %v / expected %v", success, expected))
+			}
+		}
+	}
 
-	// unlock "foo" should return nil to indicate unlock failure
-	unlockFooCommitChan1, err := rl.Unlock("foo")
-	if err != nil {
-		t.Fatal(err)
+	rl_Unlock := func(name string, expected bool, expectedErr error) {
+		success, err := rl.Unlock(name)
+		if err != expectedErr {
+			panic(err)
+		}
+		if expectedErr == nil {
+			if success != expected {
+				panic(fmt.Sprintf("got %v / expected %v", success, expected))
+			}
+		}
 	}
-	if unlockFooCommitChan1 != nil {
-		t.Fatal()
-	}
-	checkLockState("foo", false, false)
+	// Initial state test
+	rl_IsLocked("foo", false)
+	rl_IsLocked("bar", false)
 
-	// Lock "foo"
-	lockFooCommitChan2, err := rl.Lock("foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if lockFooCommitChan2 == nil {
-		t.Fatal()
-	}
-	chanWillBlock(t, lockFooCommitChan2)
-	checkLockState("foo", false, true)
+	// Check that errors are returned
+	micmaco.sendErr = raft.ErrStopped
+	rl_Lock("foo", false, raft.ErrStopped)
+	micmaco.sendErr = nil
 
-	// a second lock "foo" should return nil to indicate lock failure
-	lockFooCommitChan3, err := rl.Lock("foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if lockFooCommitChan3 != nil {
-		t.Fatal()
-	}
-	checkLockState("foo", false, true)
+	// Lock some entries
+	rl_Lock("foo", true, nil)
+	rl_Lock("bar", true, nil)
+	rl_IsLocked("foo", true)
+	rl_IsLocked("bar", true)
 
-	// lock "bar" should return nil to indicate lock failure
-	lockBarCommitChan4, err := rl.Lock("foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if lockBarCommitChan4 != nil {
-		t.Fatal()
-	}
-	checkLockState("bar", true, true)
+	// Lock of locked entry should fail
+	rl_Lock("foo", false, nil)
+	rl_IsLocked("foo", true)
 
-	// Unlock "bar"
-	unlockBarCommitChan5, err := rl.Unlock("bar")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if unlockBarCommitChan5 == nil {
-		t.Fatal()
-	}
-	chanWillBlock(t, unlockBarCommitChan5)
-	checkLockState("bar", true, false)
+	// Unlock one entry
+	rl_Unlock("foo", true, nil)
+	rl_IsLocked("foo", false)
+	rl_IsLocked("bar", true)
 
-	// Advance commitIndex by 1 log entry
-	if committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
-		t.Fatal()
-	}
-	committer.CommitIndexChanged(102)
-	if !committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
-		t.Fatal()
-	}
-	checkLockState("foo", true, true)
-	checkLockState("bar", true, false) // FAIL
-	chanHasValue(t, lockFooCommitChan2)
-	chanWillBlock(t, unlockBarCommitChan5)
+	// Unlock again should fail
+	rl_Unlock("foo", false, nil)
+	rl_IsLocked("foo", false)
 
-	// Relock "bar"
-	relockBarCommitChan6, err := rl.Lock("bar")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if relockBarCommitChan6 == nil {
-		t.Fatal()
-	}
-	checkLockState("bar", true, true)
-	chanWillBlock(t, relockBarCommitChan6)
+	// Unlock another entry, lose leadership and also lose the action
+	micmaco.loseLeadershipAndAction = true
+	rl_Unlock("bar", false, raftlock.ErrResultUnknown)
+	micmaco.loseLeadershipAndAction = false
+	rl_IsLocked("bar", true)
 
-	// Advance commitIndex by 2 log entries
-	committer.CommitIndexChanged(104)
-	if !committer.TestHelperGetCommitApplier().TestHelperRunOnceIfTriggerPending() {
-		t.Fatal()
-	}
-	checkLockState("foo", true, true)
-	checkLockState("bar", true, true)
-	chanHasValue(t, unlockBarCommitChan5)
-	chanHasValue(t, relockBarCommitChan6)
+	// Unlock again, lose leadership but commit the action
+	micmaco.loseLeadershipButCommitAction = true
+	rl_Unlock("bar", false, raftlock.ErrResultUnknown)
+	micmaco.loseLeadershipButCommitAction = false
+	rl_IsLocked("bar", false)
 }
 
-func chanWillBlock(t *testing.T, c <-chan struct{}) {
-	select {
-	case <-c:
-		t.Fatal()
-	default:
+// ---- Mock ConsensusModule - only need to implement IConsensusModule_AppendCommandOnly
+
+type mockICMACO struct {
+	sendErr                       error
+	loseLeadershipAndAction       bool
+	loseLeadershipButCommitAction bool
+	commitIndex                   raft.LogIndex
+	sm                            raft.StateMachine
+}
+
+func newMockICMACO(sm raft.StateMachine) *mockICMACO {
+	return &mockICMACO{nil, false, false, sm.GetLastApplied(), sm}
+}
+
+func (micmaco *mockICMACO) AppendCommand(command raft.Command) (<-chan raft.CommandResult, error) {
+	if micmaco.sendErr != nil {
+		return nil, micmaco.sendErr
 	}
-}
-
-func chanHasValue(t *testing.T, c <-chan struct{}) {
-	select {
-	case <-c:
-	default:
-		t.Fatal()
+	micmaco.commitIndex++
+	crc := make(chan raft.CommandResult, 1)
+	if micmaco.loseLeadershipAndAction {
+		close(crc)
+		return crc, nil
 	}
-}
-
-// ---- Mock IConsensusModule_AppendCommandOnly
-
-type MockICMACO struct {
-	rl     raft.Log
-	termNo raft.TermNo
-	sm     raft.StateMachine
-}
-
-func NewMockICMACO(rl raft.Log, termNo raft.TermNo, sm raft.StateMachine) *MockICMACO {
-	return &MockICMACO{rl, termNo, sm}
-}
-
-func (micmaco *MockICMACO) AppendCommand(command raft.Command) (raft.LogIndex, error) {
-	entry := raft.LogEntry{micmaco.termNo, command}
-	return micmaco.rl.AppendEntry(entry)
+	cr := micmaco.sm.ApplyCommand(micmaco.commitIndex, command)
+	if micmaco.loseLeadershipButCommitAction {
+		close(crc)
+		return crc, nil
+	}
+	crc <- cr
+	return crc, nil
 }
