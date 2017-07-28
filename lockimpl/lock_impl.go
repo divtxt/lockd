@@ -1,6 +1,7 @@
 package lockimpl
 
 import (
+	"log"
 	"time"
 
 	"github.com/divtxt/lockd/backend"
@@ -24,6 +25,7 @@ const (
 func NewLockApiImpl(
 	cd util.ClusterDefinition,
 	thisServerId raft.ServerId,
+	logger *log.Logger,
 ) (raftlock.RaftLock, raft.IConsensusModule, error) {
 
 	// --  Prepare raft ConsensusModule parameters
@@ -39,7 +41,7 @@ func NewLockApiImpl(
 		return nil, nil, err
 	}
 
-	rpcService := NewJsonRaftRpcService(cd, thisServerId)
+	rpcService := NewJsonRaftRpcService(cd, thisServerId, logger)
 
 	// -- Make the LockBackend
 
@@ -57,6 +59,7 @@ func NewLockApiImpl(
 		clusterInfo,
 		MaxEntriesPerAppendEntry,
 		timeSettings,
+		logger,
 	)
 	if err != nil {
 		return nil, nil, err

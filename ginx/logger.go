@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Gin logging middleware that logs to the standard lib log package
+// Gin logging middleware that logs to the given standard lib Logger.
 // Based on gin.Logger
-func StdLogLogger() gin.HandlerFunc {
+func RequestLogger(logger *log.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		start := time.Now()
@@ -28,7 +28,7 @@ func StdLogLogger() gin.HandlerFunc {
 
 		comment := c.Errors.ByType(gin.ErrorTypePrivate).String()
 
-		log.Printf(
+		logger.Printf(
 			"[http] | %3d | %13v | %s | %-7s %q\n%s",
 			statusCode,
 			latency,

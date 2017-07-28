@@ -34,39 +34,42 @@ func main() {
 		os.Exit(2)
 	}
 
+	// Make a logger
+	logger := log.New(os.Stderr, "", log.Flags())
+
 	// Process args
-	log.Println("lockd initializing")
-	log.Println("thisServerId:", args.thisServerId)
+	logger.Println("[lockd] initializing")
+	logger.Println("[lockd] thisServerId:", args.thisServerId)
 	cd, err := util.LoadClusterDefinition(args.cluster)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error loading cluster definition:", err)
+		logger.Printf("[lockd] Error loading cluster definition:", err)
 		os.Exit(2)
 	}
-	log.Println("cluster:", cd)
+	logger.Println("[lockd] cluster:", cd)
 
 	// Calculate lisen host port using port from cluster info
 	_, listenPort, err := net.SplitHostPort(cd.GetHostPort(args.thisServerId))
 	listenAddr := fmt.Sprintf("localhost:%s", listenPort)
-	log.Println("calculated listenAddr:", listenAddr)
+	logger.Println("[lockd] calculated listenAddr:", listenAddr)
 
 	// Instantiate a lock service
 	var rl raftlock.RaftLock
 	var rcm raft.IConsensusModule
-	rl, rcm, err = lockimpl.NewLockApiImpl(cd, args.thisServerId)
+	rl, rcm, err = lockimpl.NewLockApiImpl(cd, args.thisServerId, logger)
 	if err != nil {
 		panic(err)
 	}
 
 	// Configure http service
 	r := gin.New()
-	r.Use(ginx.StdLogLogger())
-	r.Use(ginx.StdLogRepanic())
+	r.Use(ginx.RequestLogger(logger))
+	r.Use(ginx.LogAndRepanic(logger))
 
 	httpimpl.AddRaftRpcEndpoints(r, rcm)
 	httpimpl.AddLockApiEndpoints(r, rl)
 
 	// Run forever / till stopped
-	log.Println("Starting server on address:", listenAddr)
+	logger.Println("[lockd] Starting server on address:", listenAddr)
 	err = r.Run(listenAddr)
 	if err != nil {
 		panic(err)

@@ -3,11 +3,12 @@ package ginx
 import (
 	"bytes"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
 	"net/http/httputil"
 	"runtime"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -19,15 +20,20 @@ var (
 
 // Gin recovery middleware that recovers from panics, writes a 500, and then repanics
 // in a new go routine to ensure we actually crash the process.
-// Writes to stdlib log.
+// Writes to the given logger.
 // Based on gin.Recovery
-func StdLogRepanic() gin.HandlerFunc {
+func LogAndRepanic(logger *log.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
 				stack := stack(3)
 				httprequest, _ := httputil.DumpRequest(c.Request, false)
-				log.Printf("[Recovery] panic recovered (will repanic after sending 500):\n%s%s\n%s\n", string(httprequest), err, stack)
+				logger.Printf(
+					"[Recovery] panic recovered (will repanic after sending 500):\n%s%s\n%s\n",
+					string(httprequest),
+					err,
+					stack,
+				)
 				c.AbortWithStatus(500)
 				go panic("Repanic!")
 			}

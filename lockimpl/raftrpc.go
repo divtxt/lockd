@@ -12,10 +12,15 @@ import (
 type JsonRaftRpcService struct {
 	cd           util.ClusterDefinition
 	thisServerId raft.ServerId
+	logger       *log.Logger
 }
 
-func NewJsonRaftRpcService(cd util.ClusterDefinition, thisServerId raft.ServerId) *JsonRaftRpcService {
-	return &JsonRaftRpcService{cd, thisServerId}
+func NewJsonRaftRpcService(
+	cd util.ClusterDefinition,
+	thisServerId raft.ServerId,
+	logger *log.Logger,
+) *JsonRaftRpcService {
+	return &JsonRaftRpcService{cd, thisServerId, logger}
 }
 
 func (jrrs *JsonRaftRpcService) RpcAppendEntries(
@@ -27,7 +32,7 @@ func (jrrs *JsonRaftRpcService) RpcAppendEntries(
 	var reply raft.RpcAppendEntriesReply
 	err := util.JsonPost(url, rpc, &reply)
 	if err != nil {
-		log.Printf("rpc to %v -> error: %v\n", toServer, err)
+		jrrs.logger.Printf("[lockd] rpc to %v -> error: %v\n", toServer, err)
 		return nil
 	}
 	return &reply
@@ -42,7 +47,7 @@ func (jrrs *JsonRaftRpcService) RpcRequestVote(
 	var reply raft.RpcRequestVoteReply
 	err := util.JsonPost(url, rpc, &reply)
 	if err != nil {
-		log.Printf("rpc to %v -> error: %v\n", toServer, err)
+		jrrs.logger.Printf("[lockd] rpc to %v -> error: %v\n", toServer, err)
 		return nil
 	}
 	return &reply
