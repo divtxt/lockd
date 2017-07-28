@@ -62,7 +62,8 @@ func main() {
 
 	// Configure http service
 	r := gin.New()
-	r.Use(ginx.RequestLogger(logger))
+	// Uncomment for HTTP logs - very verbose!
+	// r.Use(ginx.RequestLogger(logger))
 	r.Use(ginx.LogAndRepanic(logger))
 
 	httpimpl.AddRaftRpcEndpoints(r, rcm)
