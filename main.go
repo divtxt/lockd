@@ -42,7 +42,7 @@ func main() {
 	logger.Println("[lockd] thisServerId:", args.thisServerId)
 	cd, err := util.LoadClusterDefinition(args.cluster)
 	if err != nil {
-		logger.Printf("[lockd] Error loading cluster definition:", err)
+		logger.Println("[lockd] Error loading cluster definition:", err)
 		os.Exit(2)
 	}
 	logger.Println("[lockd] cluster:", cd)

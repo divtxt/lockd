@@ -74,10 +74,9 @@ func (jrrs *JsonRaftRpcService) logRpcSuccess(toServer raft.ServerId) {
 	jrrs.mutex.Lock()
 	defer jrrs.mutex.Unlock()
 	if jrrs._toServerErrCount[toServer] > 0 {
-		jrrs.logger.Printf(
-			"[lockd] rpc to %v -> success after %v consecutive errors\n",
-			toServer,
-			jrrs._toServerErrCount[toServer],
+		jrrs.logger.Println(
+			"[lockd] rpc to", toServer,
+			"- success after", jrrs._toServerErrCount[toServer], "consecutive errors",
 		)
 		jrrs._toServerErrCount[toServer] = 0
 	}
@@ -87,7 +86,8 @@ func (jrrs *JsonRaftRpcService) logRpcError(toServer raft.ServerId, err error) {
 	jrrs.mutex.Lock()
 	defer jrrs.mutex.Unlock()
 	if jrrs._toServerErrCount[toServer] == 0 {
-		jrrs.logger.Printf("[lockd] rpc to %v -> starting to error: %v\n", toServer, err)
+		jrrs.logger.Println("[lockd] rpc to", toServer, "- error:", err)
+		jrrs.logger.Println("[lockd] silencing further rpc errors to", toServer)
 	}
 	jrrs._toServerErrCount[toServer]++
 }
