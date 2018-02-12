@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/divtxt/raft"
+	raft_util "github.com/divtxt/raft/util"
 
 	"github.com/divtxt/lockd/backend"
 	"github.com/divtxt/lockd/util"
-	"github.com/divtxt/raft/testhelpers"
 )
 
 const sampleAllValidChars = "$-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
@@ -65,24 +65,32 @@ func TestInMemoryBackend(t *testing.T) {
 	lb_IsLocked(util.NameValidChars, false)
 
 	// bad names should error
-	testhelpers.TestHelper_ExpectPanic(
-		t,
+	err := raft_util.ExpectPanicMessage(
 		func() { lb.IsLocked("") },
 		"Name is empty string",
 	)
-	testhelpers.TestHelper_ExpectPanic(
-		t,
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = raft_util.ExpectPanicMessage(
 		func() { lb.Lock(13, "") },
 		"Name is empty string",
 	)
-	testhelpers.TestHelper_ExpectPanic(
-		t,
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = raft_util.ExpectPanicMessage(
 		func() { lb.IsLocked(sampleNihongo) },
 		"Name contains non-printable/non-ascii byte 230 at offset 0",
 	)
-	testhelpers.TestHelper_ExpectPanic(
-		t,
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = raft_util.ExpectPanicMessage(
 		func() { lb.Unlock(13, sampleInvalidUtf8) },
 		"Name contains non-printable/non-ascii byte 189 at offset 0",
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

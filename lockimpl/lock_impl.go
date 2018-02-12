@@ -32,7 +32,7 @@ func NewLockApiImpl(
 
 	raftPersistentState := raft_rps.NewIMPSWithCurrentTerm(0)
 
-	raftLog := raft_log.NewInMemoryLog()
+	raftLog := raft_log.NewInMemoryLog(MaxEntriesPerAppendEntry)
 
 	timeSettings := raft_config.TimeSettings{TickerDuration, ElectionTimeoutLow}
 
@@ -57,7 +57,6 @@ func NewLockApiImpl(
 		stateMachine,
 		rpcService,
 		clusterInfo,
-		MaxEntriesPerAppendEntry,
 		timeSettings,
 		logger,
 	)
