@@ -38,8 +38,8 @@ func makeAppendEntriesHandler(cm raft.IConsensusModule) func(c *gin.Context) {
 
 		// Process rpc
 		var reply *raft.RpcAppendEntriesReply
-		reply = cm.ProcessRpcAppendEntries(from, &rpc)
-		if reply == nil {
+		reply, err = cm.ProcessRpcAppendEntries(from, &rpc)
+		if err != nil {
 			panic("ConsensusModule is shutdown")
 		}
 
@@ -72,8 +72,8 @@ func makeRequestVoteHandler(cm raft.IConsensusModule) func(c *gin.Context) {
 
 		// Process rpc
 		var reply *raft.RpcRequestVoteReply
-		reply = cm.ProcessRpcRequestVote(from, &rpc)
-		if reply == nil {
+		reply, err = cm.ProcessRpcRequestVote(from, &rpc)
+		if err != nil {
 			panic("ConsensusModule is shutdown")
 		}
 
