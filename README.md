@@ -11,7 +11,7 @@ A distributed lock service.
 Run using:
 
 ```
-go get -t ./...
+go mod download
 go run main.go -cluster integtests/config/1node.json -id 1
 ```
 
@@ -124,6 +124,7 @@ Error Handling:
 - [ ] Internal error shows original stack trace
 - [ ] API timeouts
 - [ ] Field content and size limit checks
+- [ ] Avoid/delay panic where possible
 
 Integration Testing:
 
