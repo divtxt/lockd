@@ -10,7 +10,7 @@ import (
 	"github.com/divtxt/raft"
 	raft_config "github.com/divtxt/raft/config"
 	raft_impl "github.com/divtxt/raft/impl"
-	raft_log "github.com/divtxt/raft/log"
+	"github.com/divtxt/raft/inmemlog"
 	raft_rps "github.com/divtxt/raft/rps"
 )
 
@@ -32,7 +32,7 @@ func NewLockApiImpl(
 
 	raftPersistentState := raft_rps.NewIMPSWithCurrentTerm(0)
 
-	raftLog, err := raft_log.NewInMemoryLog(MaxEntriesPerAppendEntry)
+	raftLog, err := inmemlog.NewInMemoryLog(MaxEntriesPerAppendEntry)
 	if err != nil {
 		return nil, nil, err
 	}
