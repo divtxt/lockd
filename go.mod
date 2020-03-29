@@ -6,3 +6,6 @@ require (
 	github.com/divtxt/raft v0.0.0-20200113055021-ecc6dd426c02
 	github.com/gin-gonic/gin v1.5.0
 )
+
+replace github.com/divtxt/raft => ../raft
+
